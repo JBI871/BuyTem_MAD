@@ -93,15 +93,24 @@ export default function BuyerProfile({ navigation }) {
           <Text style={{ color: '#ccc' }}>No addresses added</Text>
         ) : (
           <FlatList
-            data={profile.addresses}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item, index }) => (
-              <View style={styles.addressBox}>
-                <Ionicons name="location-outline" size={18} color="#fff" style={{ marginRight: 5 }} />
-                <Text style={styles.addressText}>{index + 1}. {item.apartment_no}, {item.building_no}, {item.floor_num}, {item.road}</Text>
-              </View>
-            )}
-          />
+  data={profile.addresses}
+  keyExtractor={(item) => item.id.toString()}
+  renderItem={({ item }) => (
+    <TouchableOpacity
+      style={styles.addressCard}
+      onPress={() => {
+        // Optional: navigate to map or show location
+        console.log('Map for:', item.road);
+      }}
+    >
+      <Text style={styles.cardTitle}>{item.road}</Text>
+      <Text style={styles.cardText}>Building: {item.building_no}</Text>
+      <Text style={styles.cardText}>Floor: {item.floor_num}</Text>
+      <Text style={styles.cardText}>Apartment: {item.apartment_no}</Text>
+    </TouchableOpacity>
+  )}
+/>
+
         )}
 
         <TouchableOpacity
@@ -129,7 +138,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.05)',
-    padding: 10,
     borderRadius: 10,
     marginBottom: 8,
     width: '100%',
@@ -138,4 +146,23 @@ const styles = StyleSheet.create({
   buttonWrapper: { marginTop: 20, width: '100%' },
   button: { paddingVertical: 14, borderRadius: 10, alignItems: 'center' },
   buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  addressCard: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    paddingHorizontal: 70,
+    paddingVertical:15,
+    borderRadius: 10,
+    marginBottom: 12,
+    width: '100%',
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 6,
+  },
+  cardText: {
+    color: '#fff',
+    fontSize: 14,
+    marginBottom: 2,
+  },
 });

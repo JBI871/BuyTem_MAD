@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, Image, Alert, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, Image, Alert, StyleSheet, ScrollView, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,7 +13,7 @@ export default function BuyerProfileEdit({ route, navigation }) {
   const [contact, setContact] = useState(profile.contact || '');
   const [imageUri, setImageUri] = useState(profile.imageUri || null);
   const [addresses, setAddresses] = useState([]);
-  const [showAddPanel, setShowAddPanel] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [newAddress, setNewAddress] = useState({ apartment_no:'', building_no:'', floor_num:'', road:'' });
   const [userId, setUserId] = useState('');
   const [token, setToken] = useState('');
@@ -66,7 +66,7 @@ export default function BuyerProfileEdit({ route, navigation }) {
       if (!res.ok) { Alert.alert('Error', data.error || 'Failed to add address'); return; }
       setAddresses([...addresses, { ...newAddress, id: data.id }]);
       setNewAddress({ apartment_no:'', building_no:'', floor_num:'', road:'' });
-      setShowAddPanel(false);
+      setShowModal(false);
       Alert.alert('Success', 'Address added!');
     } catch (err) { console.log('Add address error:', err); Alert.alert('Error', 'Something went wrong'); }
   };
@@ -78,21 +78,6 @@ export default function BuyerProfileEdit({ route, navigation }) {
       if (!res.ok) { Alert.alert('Error', data.error || 'Failed to delete address'); return; }
       setAddresses(addresses.filter(addr => addr.id !== id));
     } catch (err) { console.log('Delete address error:', err); Alert.alert('Error', 'Something went wrong'); }
-  };
-
-  const handleEditAddress = async (id, field, value) => {
-    try {
-      const updatedAddress = addresses.find(addr => addr.id === id);
-      const updateData = { ...updatedAddress, [field]: value };
-      const res = await fetch(`${portLink()}/addresses/${id}`, {
-        method:'PUT',
-        headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify(updateData),
-      });
-      const data = await res.json();
-      if (!res.ok) { Alert.alert('Error', data.error || 'Failed to update address'); return; }
-      setAddresses(addresses.map(addr => addr.id === id ? updateData : addr));
-    } catch (err) { console.log('Edit address error:', err); Alert.alert('Error', 'Something went wrong'); }
   };
 
   const saveProfile = async () => {
@@ -117,7 +102,7 @@ export default function BuyerProfileEdit({ route, navigation }) {
 
         <TouchableOpacity onPress={pickImage}>
           <Image source={imageUri ? { uri:imageUri } : require('../../assets/placeholderpp.png')} style={styles.image} />
-          <Text style={{ color:'#1e90ff', marginTop:5, textAlign:'center' }}>Change Image</Text>
+          <Text style={{ color:'#1e90ff', marginBottom:10, textAlign:'center' }}>Change Image</Text>
         </TouchableOpacity>
 
         <View style={styles.inputWrapper}>
@@ -131,95 +116,88 @@ export default function BuyerProfileEdit({ route, navigation }) {
         </View>
 
         <Text style={[styles.sectionTitle,{ marginTop:20 }]}>Addresses</Text>
+
         {addresses.length === 0 ? <Text style={{ color:'#ccc' }}>No addresses added</Text> : (
           <FlatList
-            data={addresses}
-            keyExtractor={item => item.id}
-            renderItem={({ item, index }) => (
-              <View style={styles.addressBox}>
-                <Ionicons name="location-outline" size={18} color="#fff" style={{ marginRight:5 }} />
-                <Text style={{ color:'#fff', fontWeight:'bold', marginRight:8 }}>{index+1}.</Text>
-                <TextInput
-                  style={styles.addressInputHorizontal}
-                  value={item.apartment_no}
-                  placeholder="Apartment No"
-                  placeholderTextColor="#ccc"
-                  onChangeText={text => handleEditAddress(item.id, 'apartment_no', text)}
-                />
-                <TextInput
-                  style={styles.addressInputHorizontal}
-                  value={item.building_no}
-                  placeholder="Building No"
-                  placeholderTextColor="#ccc"
-                  onChangeText={text => handleEditAddress(item.id, 'building_no', text)}
-                />
-                <TextInput
-                  style={styles.addressInputHorizontal}
-                  value={item.floor_num}
-                  placeholder="Floor No"
-                  placeholderTextColor="#ccc"
-                  onChangeText={text => handleEditAddress(item.id, 'floor_num', text)}
-                />
-                <TextInput
-                  style={styles.addressInputHorizontal}
-                  value={item.road}
-                  placeholder="Road"
-                  placeholderTextColor="#ccc"
-                  onChangeText={text => handleEditAddress(item.id, 'road', text)}
-                />
-                <TouchableOpacity onPress={() => handleRemoveAddress(item.id)} style={{ marginLeft:5 }}>
-                  <Ionicons name="trash-outline" size={22} color="red" />
-                </TouchableOpacity>
-              </View>
-            )}
-          />
+  data={profile.addresses}
+  keyExtractor={(item) => item.id.toString()}
+  renderItem={({ item }) => (
+    <View style={styles.addressCard}>
+      {/* Remove Icon at top-right */}
+      <TouchableOpacity
+        style={styles.removeIcon}
+        onPress={() => handleRemoveAddress(item.id)}
+      >
+        <Ionicons name="trash-outline" size={22} color="red" />
+      </TouchableOpacity>
+
+      {/* Address Text */}
+      <TouchableOpacity
+        style={{ paddingRight: 30 }} // space so text doesn't go under icon
+        onPress={() => console.log('Map for:', item.road)}
+      >
+        <Text style={styles.cardTitle}>{item.road}</Text>
+        <Text style={styles.cardText}>Building: {item.building_no}</Text>
+        <Text style={styles.cardText}>Floor: {item.floor_num}</Text>
+        <Text style={styles.cardText}>Apartment: {item.apartment_no}</Text>
+      </TouchableOpacity>
+    </View>
+  )}
+/>
+
         )}
 
-        <TouchableOpacity onPress={() => setShowAddPanel(!showAddPanel)} style={{marginVertical:10}}>
-  <Text style={{color:'#1e90ff', fontWeight:'bold', textAlign:'center'}}>
-    {showAddPanel ? 'Hide Add New Address' : 'Add New Address'}
-  </Text>
-</TouchableOpacity>
+        <TouchableOpacity onPress={() => setShowModal(true)} style={{marginVertical:10}}>
+          <Text style={{color:'#1e90ff', fontWeight:'bold', textAlign:'center'}}>Add New Address</Text>
+        </TouchableOpacity>
 
-{showAddPanel && (
-  <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={{ marginBottom:15 }}>
-    <View style={{ flexDirection:'row', alignItems:'center' }}>
+        {/* Modal Form */}
+       <Modal visible={showModal} transparent={true} animationType="slide">
+  <View style={styles.modalOverlay}>
+    <LinearGradient
+      colors={['#0f2027', '#203a43', '#2c5364']}
+      style={styles.modalContent}
+    >
+      <Text style={styles.modalTitle}>Add New Address</Text>
       <TextInput
-        placeholder="Apartment No"
+        placeholder="Road"
         placeholderTextColor="#ccc"
-        style={styles.addressInputHorizontal}
-        value={newAddress.apartment_no}
-        onChangeText={text => setNewAddress({ ...newAddress, apartment_no:text })}
+        style={styles.modalInput}
+        value={newAddress.road}
+        onChangeText={text => setNewAddress({ ...newAddress, road: text })}
       />
       <TextInput
         placeholder="Building No"
         placeholderTextColor="#ccc"
-        style={styles.addressInputHorizontal}
+        style={styles.modalInput}
         value={newAddress.building_no}
-        onChangeText={text => setNewAddress({ ...newAddress, building_no:text })}
+        onChangeText={text => setNewAddress({ ...newAddress, building_no: text })}
       />
       <TextInput
         placeholder="Floor No"
         placeholderTextColor="#ccc"
-        style={styles.addressInputHorizontal}
+        style={styles.modalInput}
         value={newAddress.floor_num}
-        onChangeText={text => setNewAddress({ ...newAddress, floor_num:text })}
+        onChangeText={text => setNewAddress({ ...newAddress, floor_num: text })}
       />
       <TextInput
-        placeholder="Road"
+        placeholder="Apartment No"
         placeholderTextColor="#ccc"
-        style={styles.addressInputHorizontal}
-        value={newAddress.road}
-        onChangeText={text => setNewAddress({ ...newAddress, road:text })}
+        style={styles.modalInput}
+        value={newAddress.apartment_no}
+        onChangeText={text => setNewAddress({ ...newAddress, apartment_no: text })}
       />
-      <TouchableOpacity onPress={handleAddAddress} style={{ marginLeft:5 }}>
-        <LinearGradient colors={['#3a6b35','#2c4f25']} style={[styles.buttonGradient, { paddingHorizontal:12, paddingVertical:10 }]}>
-          <Text style={styles.buttonText}>Add</Text>
-        </LinearGradient>
-      </TouchableOpacity>
-    </View>
-  </ScrollView>
-)}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
+        <TouchableOpacity onPress={() => setShowModal(false)} style={[styles.modalButton, { backgroundColor: 'gray' }]}>
+          <Text style={styles.modalButtonText}>Cancel</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleAddAddress} style={styles.modalButton}>
+          <Text style={styles.modalButtonText}>Save</Text>
+        </TouchableOpacity>
+      </View>
+    </LinearGradient>
+  </View>
+</Modal>
 
         <TouchableOpacity onPress={saveProfile} style={styles.button}>
           <LinearGradient colors={['#3a6b35','#2c4f25']} style={styles.buttonGradient}>
@@ -240,9 +218,71 @@ const styles = StyleSheet.create({
   icon:{ marginRight:8 },
   input:{ flex:1, color:'#fff', paddingVertical:8 },
   sectionTitle:{ fontSize:20, fontWeight:'bold', color:'#fff', alignSelf:'flex-start', marginBottom:10 },
-  addressBox:{ flexDirection:'row', alignItems:'center', backgroundColor:'rgba(255,255,255,0.05)', padding:8, borderRadius:10, marginBottom:10, flexWrap:'nowrap' },
-  addressInputHorizontal:{ borderWidth:1, borderColor:'#ccc', borderRadius:5, padding:5, marginRight:5, color:'#fff', flex:1 },
   button:{ width:'100%', marginVertical:5 },
   buttonGradient:{ paddingVertical:14, borderRadius:10, alignItems:'center' },
-  buttonText:{ color:'#fff', fontWeight:'bold', fontSize:16 }
+  buttonText:{ color:'#fff', fontWeight:'bold', fontSize:16 },
+
+addressCard: {
+  backgroundColor: 'rgba(255,255,255,0.05)',
+  paddingLeft: 70,
+  paddingRight: 70,
+  paddingVertical: 15,
+  borderRadius: 10,
+  marginBottom: 12,
+  width: '100%',
+  position: 'relative', // needed for absolute icon positioning
+},
+
+removeIcon: {
+  position: 'absolute',
+  top: 10,
+  right: 10,
+  zIndex: 1,
+},
+
+cardTitle: {
+  fontSize: 16,
+  fontWeight: 'bold',
+  color: '#fff',
+  marginBottom: 6,
+},
+
+cardText: {
+  color: '#fff',
+  fontSize: 14,
+  marginBottom: 2,
+},
+
+  // Modal styles
+  modalOverlay: {
+  flex: 1,
+  backgroundColor: 'rgba(0,0,0,0.5)', // keeps dim effect
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+modalContent: {
+  width: '90%',
+  borderRadius: 10,
+  padding: 20,
+},
+modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 15, color: '#fff' },
+modalInput: {
+  borderWidth: 1,
+  borderColor: '#555',
+  borderRadius: 8,
+  padding: 10,
+  marginBottom: 10,
+  color: '#fff',
+  backgroundColor: 'rgba(255,255,255,0.05)',
+},
+modalButton: {
+  flex: 1,
+  backgroundColor: '#3a6b35',
+  paddingVertical: 12,
+  borderRadius: 8,
+  alignItems: 'center',
+  marginHorizontal: 5,
+},
+modalButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+
 });
