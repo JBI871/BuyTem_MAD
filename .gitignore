@@ -1,6 +1,8 @@
 # Keep .env from main branch
 .env
 
+backend/config/serviceAccountKey.json
+
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
 # dependencies
@@ -38,3 +40,4 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+

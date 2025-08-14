@@ -1,7 +1,8 @@
-// BuyerProfile.js
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, Button, StyleSheet, FlatList, Alert } from 'react-native';
+import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { portLink } from '../../navigation/AppNavigation';
 
 export default function BuyerProfile({ navigation }) {
@@ -24,26 +25,21 @@ export default function BuyerProfile({ navigation }) {
           return;
         }
 
-        // Fetch user profile
         const resProfile = await fetch(`${portLink()}/users/by_id/${userId}`, {
-          method: 'GET',
           headers: { 'Authorization': `Bearer ${token}` },
         });
         const dataProfile = await resProfile.json();
+        
         if (!resProfile.ok) {
           Alert.alert('Error', dataProfile.error || 'Failed to fetch profile');
           return;
         }
 
-        // Fetch addresses
         const resAddresses = await fetch(`${portLink()}/addresses/user/${userId}`, {
-          method: 'GET',
           headers: { 'Authorization': `Bearer ${token}` },
         });
         const dataAddresses = await resAddresses.json();
-        if (!resAddresses.ok) {
-          Alert.alert('Error', 'Failed to fetch addresses');
-        }
+        
 
         setProfile({
           name: dataProfile.name || '',
@@ -52,7 +48,12 @@ export default function BuyerProfile({ navigation }) {
           imageUri: dataProfile.image || null,
           addresses: dataAddresses || [],
         });
-
+        if(resAddresses.status === 404) {
+          return;
+        }
+        if (!resAddresses.ok) {
+          Alert.alert('Error', 'Failed to fetch addresses');
+        }
       } catch (err) {
         console.log('Fetch profile error:', err);
         Alert.alert('Error', 'Something went wrong while fetching profile');
@@ -63,50 +64,78 @@ export default function BuyerProfile({ navigation }) {
   }, []);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Buyer Profile</Text>
+    <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <Text style={styles.title}>Buyer Profile</Text>
 
-      <Image
-        source={profile.imageUri ? { uri: profile.imageUri } : require('../../assets/placeholderpp.png')}
-        style={styles.image}
-      />
-      <Text>Name: {profile.name || 'N/A'}</Text>
-      <Text>Email: {profile.email || 'N/A'}</Text>
-      <Text>Contact: {profile.contact || 'N/A'}</Text>
-
-      <Text style={{ marginTop: 20, fontWeight: 'bold' }}>Delivery Addresses:</Text>
-      {profile.addresses.length === 0 ? (
-        <Text>No addresses added</Text>
-      ) : (
-        <FlatList
-          data={profile.addresses}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item, index }) => (
-            <View style={styles.addressBox}>
-              <Text>{index + 1}. {item.apartment_no}, {item.building_no}, {item.floor_num}, {item.road}</Text>
-            </View>
-          )}
+        <Image
+          source={profile.imageUri ? { uri: profile.imageUri } : require('../../assets/placeholderpp.png')}
+          style={styles.image}
         />
-      )}
 
-      <Button
-        title="Edit Profile"
-        onPress={() => navigation.navigate('BuyerProfileEdit', { profile })}
-      />
-    </View>
+        <View style={styles.infoRow}>
+          <Ionicons name="person-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+          <Text style={styles.infoText}>{profile.name || 'N/A'}</Text>
+        </View>
+
+        <View style={styles.infoRow}>
+          <Ionicons name="mail-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+          <Text style={styles.infoText}>{profile.email || 'N/A'}</Text>
+        </View>
+
+        <View style={styles.infoRow}>
+          <Ionicons name="call-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+          <Text style={styles.infoText}>{profile.contact || 'N/A'}</Text>
+        </View>
+
+        <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Delivery Addresses:</Text>
+        {profile.addresses.length === 0 ? (
+          <Text style={{ color: '#ccc' }}>No addresses added</Text>
+        ) : (
+          <FlatList
+            data={profile.addresses}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item, index }) => (
+              <View style={styles.addressBox}>
+                <Ionicons name="location-outline" size={18} color="#fff" style={{ marginRight: 5 }} />
+                <Text style={styles.addressText}>{index + 1}. {item.apartment_no}, {item.building_no}, {item.floor_num}, {item.road}</Text>
+              </View>
+            )}
+          />
+        )}
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate('BuyerProfileEdit', { profile })}
+          style={styles.buttonWrapper}
+        >
+          <LinearGradient colors={['#3a6b35', '#2c4f25']} style={styles.button}>
+            <Text style={styles.buttonText}>Edit Profile</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, alignItems: 'center' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
-  image: { width: 100, height: 100, borderRadius: 50, marginBottom: 20 },
-  addressBox: { 
-    padding: 8, 
-    borderWidth: 1, 
-    borderColor: '#ccc', 
-    borderRadius: 5, 
-    marginVertical: 4, 
-    width: '100%' 
+  container: { flex: 1 },
+  scroll: { padding: 20, alignItems: 'center' },
+  title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 20 },
+  image: { width: 120, height: 120, borderRadius: 60, marginBottom: 20, borderWidth: 2, borderColor: '#fff' },
+  infoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  infoText: { color: '#fff', fontSize: 16 },
+  sectionTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff', alignSelf: 'flex-start', marginBottom: 10 },
+  addressBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 8,
+    width: '100%',
   },
+  addressText: { color: '#fff', fontSize: 14 },
+  buttonWrapper: { marginTop: 20, width: '100%' },
+  button: { paddingVertical: 14, borderRadius: 10, alignItems: 'center' },
+  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
 });

@@ -1,7 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { portLink } from '../../navigation/AppNavigation';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function LoginScreen({ setUserRole, setUserEmail, navigation }) {
   const [email, setEmail] = useState('');
@@ -14,8 +24,6 @@ export default function LoginScreen({ setUserRole, setUserEmail, navigation }) {
     }
 
     try {
-      console.log('Backend URL:', portLink());
-
       const response = await fetch(`${portLink()}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -24,34 +32,25 @@ export default function LoginScreen({ setUserRole, setUserEmail, navigation }) {
 
       const data = await response.json();
 
-      // Check if login failed
       if (!response.ok) {
         Alert.alert('Error', data.error || 'Login failed');
         return;
       }
 
-      // Verify all required fields exist
       if (!data.token || !data.id || !data.role) {
         Alert.alert('Error', 'Login response incomplete. Please check your backend.');
-        console.log('Incomplete login response:', data);
         return;
       }
 
-      console.log('Frontend received:', data); // token, id, role
-
-      // Store values in AsyncStorage
       await AsyncStorage.setItem('token', data.token);
       await AsyncStorage.setItem('userId', data.id);
       await AsyncStorage.setItem('userRole', data.role);
 
-      // Update parent state
       if (setUserRole) setUserRole(data.role);
       if (setUserEmail) setUserEmail(email);
 
       Alert.alert('Success', `Logged in as ${data.role}`);
-
-      // Optionally navigate to protected screen
-      // navigation.replace('Home'); // uncomment and change 'Home' to your screen
+      // navigation.replace('Home');
     } catch (error) {
       console.log('Login error:', error);
       Alert.alert('Error', 'Something went wrong during login');
@@ -59,57 +58,121 @@ export default function LoginScreen({ setUserRole, setUserEmail, navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+    <LinearGradient
+      colors={['#1E1E2E', '#121212']}
+      style={{ flex: 1 }}
+    >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}
+      >
+        <View style={styles.card}>
+          <Text style={styles.title}>Welcome Back 👋</Text>
+          <Text style={styles.subtitle}>Login to continue</Text>
 
-      <TextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        style={styles.input}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      <TextInput
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        style={styles.input}
-      />
+          <TextInput
+            placeholder="Email"
+            placeholderTextColor="#aaa"
+            value={email}
+            onChangeText={setEmail}
+            style={styles.input}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          <TextInput
+            placeholder="Password"
+            placeholderTextColor="#aaa"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            style={styles.input}
+          />
 
-      <Button title="Login" onPress={handleLogin} />
+          <TouchableOpacity onPress={handleLogin} style={styles.buttonWrapper}>
+            <LinearGradient
+              colors={['#6C63FF', '#514BC3']}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>Login</Text>
+            </LinearGradient>
+          </TouchableOpacity>
 
-      <View style={styles.signupRow}>
-        <Text>Not a member? </Text>
-        <Button title="SignUp" onPress={() => navigation.navigate('Signup')} />
-      </View>
-    </View>
+          <View style={styles.signupRow}>
+            <Text style={styles.signupText}>Not a member? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+              <Text style={styles.signupLink}>Sign Up</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingHorizontal: 20,
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+  },
+  card: {
+    backgroundColor: '#1E1E2E',
+    borderRadius: 15,
+    padding: 25,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#fff',
+  },
+  subtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    color: '#bbb',
     marginBottom: 20,
+    marginTop: 5,
   },
   input: {
     width: '100%',
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#333',
+    backgroundColor: '#2A2A3C',
+    marginBottom: 12,
+    padding: 12,
+    borderRadius: 10,
+    fontSize: 16,
+    color: '#fff',
+  },
+  buttonWrapper: {
+    marginTop: 5,
     marginBottom: 10,
-    padding: 8,
-    borderRadius: 5,
+  },
+  button: {
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: 'bold',
   },
   signupRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
+    justifyContent: 'center',
+    marginTop: 15,
+  },
+  signupText: {
+    color: '#bbb',
+  },
+  signupLink: {
+    color: '#6C63FF',
+    fontWeight: 'bold',
   },
 });

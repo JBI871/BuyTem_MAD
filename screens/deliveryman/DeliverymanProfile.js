@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Switch, StyleSheet, Image, Button, Alert } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {portLink} from '../../navigation/AppNavigation'
+import { LinearGradient } from 'expo-linear-gradient';
+import { portLink } from '../../navigation/AppNavigation';
 
 export default function UserProfile({ navigation }) {
   const [userId, setUserId] = useState('');
@@ -12,7 +13,7 @@ export default function UserProfile({ navigation }) {
     const fetchProfile = async () => {
       try {
         const tk = await AsyncStorage.getItem('token');
-        const id = await AsyncStorage.getItem('userId'); // load userId from storage
+        const id = await AsyncStorage.getItem('userId');
         setToken(tk);
         setUserId(id);
 
@@ -33,38 +34,94 @@ export default function UserProfile({ navigation }) {
     fetchProfile();
   }, []);
 
-
-
-  if (!profile) return <Text>Loading...</Text>;
+  if (!profile) return (
+    <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.loadingContainer}>
+      <Text style={{ color: '#fff', fontSize: 16 }}>Loading...</Text>
+    </LinearGradient>
+  );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>User Profile</Text>
+    <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <View style={styles.card}>
+          <Text style={styles.title}>User Profile</Text>
 
-      <Image
-        source={profile.image ? { uri: profile.image } : require('../../assets/placeholderpp.png')}
-        style={styles.image}
-      />
+          <Image
+            source={profile.image ? { uri: profile.image } : require('../../assets/placeholderpp.png')}
+            style={styles.image}
+          />
 
-      <Text>Name: {profile.name ?? 'N/A'}</Text>
-      <Text>Contact: {profile.phone ?? 'N/A'}</Text>
+          <Text style={styles.label}>Name:</Text>
+          <Text style={styles.value}>{profile.name ?? 'N/A'}</Text>
 
-      {/* <View style={styles.statusRow}>
-        <Text>Status: {isAvailable ? 'Available' : 'Unavailable'}</Text>
-        <Switch value={isAvailable} onValueChange={toggleAvailability} />
-      </View> */}
+          <Text style={styles.label}>Contact:</Text>
+          <Text style={styles.value}>{profile.phone ?? 'N/A'}</Text>
 
-      <Button
-        title="Edit Profile"
-        onPress={() => navigation.navigate('DeliverymanProfileEdit')}
-      />
-    </View>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('DeliverymanProfileEdit')}
+            style={styles.buttonWrapper}
+          >
+            <LinearGradient colors={['#3a6b35', '#2c4f25']} style={styles.button}>
+              <Text style={styles.buttonText}>Edit Profile</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
-  statusRow: { flexDirection: 'row', alignItems: 'center', marginTop: 20, gap: 10 },
-  image: { width: 120, height: 120, borderRadius: 60, marginBottom: 20, alignSelf: 'center' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  container: { flex: 1 },
+  scroll: { padding: 20 },
+  card: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 15,
+    padding: 25,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  image: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 2,
+    borderColor: '#6C63FF',
+    marginBottom: 20,
+    alignSelf: 'center',
+  },
+  label: {
+    color: '#bbb',
+    fontSize: 14,
+    marginTop: 10,
+  },
+  value: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  buttonWrapper: {
+    marginTop: 25,
+  },
+  button: {
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 });

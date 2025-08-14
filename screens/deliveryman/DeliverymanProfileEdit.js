@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, Image, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Alert, Image, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
-import {portLink} from '../../navigation/AppNavigation'
+import { LinearGradient } from 'expo-linear-gradient';
+import { portLink } from '../../navigation/AppNavigation';
 
 export default function DeliverymanProfileEdit({ navigation }) {
   const [userId, setUserId] = useState('');
@@ -92,42 +93,114 @@ export default function DeliverymanProfileEdit({ navigation }) {
     }
   };
 
-  if (!profile) return <Text style={{ padding: 20 }}>Loading...</Text>;
+  if (!profile) return (
+    <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.loadingContainer}>
+      <Text style={{ color: '#fff', fontSize: 16 }}>Loading...</Text>
+    </LinearGradient>
+  );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Edit Profile</Text>
+    <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <View style={styles.card}>
+          <Text style={styles.title}>Edit Profile</Text>
 
-      <TouchableOpacity onPress={pickImage}>
-        <Image
-          source={imageUri ? { uri: imageUri } : require('../../assets/placeholderpp.png')}
-          style={styles.image}
-        />
-        <Text style={{ textAlign: 'center', marginBottom: 20, color: 'blue' }}>Tap to change image</Text>
-      </TouchableOpacity>
+          <TouchableOpacity onPress={pickImage}>
+            <Image
+              source={imageUri ? { uri: imageUri } : require('../../assets/placeholderpp.png')}
+              style={styles.image}
+            />
+            <Text style={styles.imageText}>Tap to change image</Text>
+          </TouchableOpacity>
 
-      <Text>Name:</Text>
-      <TextInput
-        value={name}
-        onChangeText={setName}
-        style={styles.input}
-      />
+          <Text style={styles.label}>Name:</Text>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            style={styles.input}
+            placeholderTextColor="#888"
+          />
 
-      <Text>Contact:</Text>
-      <TextInput
-        value={contact}
-        onChangeText={setContact}
-        style={styles.input}
-      />
+          <Text style={styles.label}>Contact:</Text>
+          <TextInput
+            value={contact}
+            onChangeText={setContact}
+            style={styles.input}
+            placeholderTextColor="#888"
+          />
 
-      <Button title="Save Changes" onPress={handleSave} />
-    </View>
+          <TouchableOpacity onPress={handleSave} style={styles.buttonWrapper}>
+            <LinearGradient colors={['#3a6b35', '#2c4f25']} style={styles.button}>
+              <Text style={styles.buttonText}>Save Changes</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 10, marginBottom: 15, borderRadius: 5 },
-  image: { width: 120, height: 120, borderRadius: 60, marginBottom: 10, alignSelf: 'center' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  container: { flex: 1 },
+  scroll: { padding: 20 },
+  card: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 15,
+    padding: 25,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  image: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 2,
+    borderColor: '#6C63FF',
+    marginBottom: 10,
+    alignSelf: 'center',
+  },
+  imageText: {
+    textAlign: 'center',
+    color: '#6C63FF',
+    marginBottom: 20,
+    fontSize: 14,
+  },
+  label: {
+    color: '#bbb',
+    fontSize: 14,
+    marginTop: 10,
+  },
+  input: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    color: '#fff',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  buttonWrapper: {
+    marginTop: 20,
+  },
+  button: {
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 });

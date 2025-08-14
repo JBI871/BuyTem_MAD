@@ -29,9 +29,7 @@ import DeliverymanOrderDetails from '../screens/deliveryman/DeliverymanOrderDeta
 
 const Stack = createNativeStackNavigator();
 
-export const portLink = () => 'http://192.168.37.224:5000'; // your backend URL & port
-
-
+export const portLink = () => 'http://192.168.0.110:6000'; // your backend URL & port
 
 function BuyerStack({ setUserRole, userEmail }) {
   return (

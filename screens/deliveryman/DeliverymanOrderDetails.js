@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, Button, Alert } from 'react-native';
-import {portLink} from '../../navigation/AppNavigation'
+import { View, Text, Alert, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { portLink } from '../../navigation/AppNavigation';
 
 export default function DeliverymanOrderDetails({ route, navigation }) {
   const { order } = route.params;
@@ -25,25 +26,82 @@ export default function DeliverymanOrderDetails({ route, navigation }) {
   };
 
   return (
-    <View style={{ flex: 1, padding: 20 }}>
-      <Text style={{ fontSize: 24, fontWeight: 'bold' }}>
-        {order.customerName}
-      </Text>
-      <Text style={{ marginVertical: 5 }}>{order.address}</Text>
-      <Text style={{ marginVertical: 5 }}>Status: {status}</Text>
+    <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <View style={styles.card}>
+          <Text style={styles.customerName}>{order.customerName}</Text>
+          <Text style={styles.address}>{order.address}</Text>
+          <Text style={styles.status}>Status: {status}</Text>
 
-      {/* If not assigned, show option to select order */}
-      {!assigned && (
-        <Button title="Select Order" onPress={handleSelectOrder} />
-      )}
+          {!assigned && (
+            <TouchableOpacity onPress={handleSelectOrder} style={styles.buttonWrapper}>
+              <LinearGradient colors={['#3a6b35', '#2c4f25']} style={styles.button}>
+                <Text style={styles.buttonText}>Select Order</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
 
-      {/* If assigned, show status update buttons */}
-      {assigned && status === 'Assigned to you' && (
-        <Button title="Mark as Picked Up" onPress={handlePickup} />
-      )}
-      {assigned && status === 'Picked Up' && (
-        <Button title="Mark as Delivered" onPress={handleDelivery} />
-      )}
-    </View>
+          {assigned && status === 'Assigned to you' && (
+            <TouchableOpacity onPress={handlePickup} style={styles.buttonWrapper}>
+              <LinearGradient colors={['#3a6b35', '#2c4f25']} style={styles.button}>
+                <Text style={styles.buttonText}>Mark as Picked Up</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+
+          {assigned && status === 'Picked Up' && (
+            <TouchableOpacity onPress={handleDelivery} style={styles.buttonWrapper}>
+              <LinearGradient colors={['#7a1f1f', '#4d0f0f']} style={styles.button}>
+                <Text style={styles.buttonText}>Mark as Delivered</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+        </View>
+      </ScrollView>
+    </LinearGradient>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  scroll: { padding: 20 },
+  card: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 15,
+    padding: 25,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
+  },
+  customerName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 10,
+  },
+  address: {
+    fontSize: 16,
+    color: '#ccc',
+    marginBottom: 10,
+  },
+  status: {
+    fontSize: 14,
+    color: '#aaa',
+    marginBottom: 20,
+  },
+  buttonWrapper: {
+    marginTop: 10,
+  },
+  button: {
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+});
