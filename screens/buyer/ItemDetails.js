@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Image, View, Text, Button, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {portLink} from '../../navigation/AppNavigation'
 
 export default function ItemDetails({ route, navigation }) {
   const { item } = route.params;

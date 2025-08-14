@@ -4,8 +4,7 @@ const db = require('../config/firebase');
 const bcrypt = require('bcrypt');
 const authenticateToken = require('../middleware/auth');
 
-// 1. Signup - no auth required
-router.post('/', async (req, res) => {
+router.post('/auth/register', async (req, res) => {
   try {
     const data = req.body;
     const snapshot = await db.collection('users').where('email', '==', data.email).get();
@@ -16,7 +15,9 @@ router.post('/', async (req, res) => {
     if (!data.role) {
       data.role = 'customer';
     }
-
+    if (!data.image) {
+      data.image = '../../../assets/placeholderpp.png';
+    }
     if (data.password) {
       const saltRounds = 10;
       data.password = await bcrypt.hash(data.password, saltRounds);

@@ -29,6 +29,10 @@ import DeliverymanOrderDetails from '../screens/deliveryman/DeliverymanOrderDeta
 
 const Stack = createNativeStackNavigator();
 
+export const portLink = () => 'http://192.168.37.224:5000'; // your backend URL & port
+
+
+
 function BuyerStack({ setUserRole, userEmail }) {
   return (
     <Stack.Navigator>
@@ -99,7 +103,7 @@ export default function AppNavigation() {
             </Stack.Screen>
             <Stack.Screen name="Signup" component={SignupScreen} />
           </>
-        ) : userRole === 'buyer' ? (
+        ) : userRole === 'customer' ? (
           <Stack.Screen name="BuyerStack">
             {(props) => 
               <BuyerStack 

@@ -1,71 +1,62 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Switch, StyleSheet, Image, Button, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {portLink} from '../../navigation/AppNavigation'
 
-export default function DeliverymanProfile({ userEmail, navigation }) {
+export default function UserProfile({ navigation }) {
+  const [userId, setUserId] = useState('');
   const [profile, setProfile] = useState(null);
-  const [isAvailable, setIsAvailable] = useState(true);
+  const [token, setToken] = useState('');
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const usersJSON = await AsyncStorage.getItem('users');
-        const users = usersJSON ? JSON.parse(usersJSON) : [];
-        const user = users.find(u => u.email === userEmail && u.role === 'deliveryman');
+        const tk = await AsyncStorage.getItem('token');
+        const id = await AsyncStorage.getItem('userId'); // load userId from storage
+        setToken(tk);
+        setUserId(id);
 
-        if (user) {
-          setProfile(user);
-          setIsAvailable(user.isAvailable ?? true);
+        const res = await fetch(`${portLink()}/users/by_id/${id}`, {
+          headers: { 'Authorization': `Bearer ${tk}` }
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          Alert.alert('Error', data.error || 'Failed to fetch user');
+          return;
         }
-      } catch (error) {
-        console.log(error);
+        setProfile(data);
+      } catch (err) {
+        console.log('Fetch user error:', err);
       }
     };
 
     fetchProfile();
-  }, [userEmail]);
+  }, []);
 
-  const toggleAvailability = async () => {
-    try {
-      const usersJSON = await AsyncStorage.getItem('users');
-      const users = usersJSON ? JSON.parse(usersJSON) : [];
 
-      const updatedUsers = users.map(u => {
-        if (u.email === userEmail && u.role === 'deliveryman') {
-          return { ...u, isAvailable: !isAvailable };
-        }
-        return u;
-      });
-
-      await AsyncStorage.setItem('users', JSON.stringify(updatedUsers));
-      setIsAvailable(prev => !prev);
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   if (!profile) return <Text>Loading...</Text>;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Deliveryman Profile</Text>
+      <Text style={styles.title}>User Profile</Text>
 
       <Image
-        source={profile.imageUri ? { uri: profile.imageUri } : require('../../assets/placeholderpp.png')}
+        source={profile.image ? { uri: profile.image } : require('../../assets/placeholderpp.png')}
         style={styles.image}
       />
 
       <Text>Name: {profile.name ?? 'N/A'}</Text>
-      <Text>Contact: {profile.contact ?? 'N/A'}</Text>
+      <Text>Contact: {profile.phone ?? 'N/A'}</Text>
 
-      <View style={styles.statusRow}>
+      {/* <View style={styles.statusRow}>
         <Text>Status: {isAvailable ? 'Available' : 'Unavailable'}</Text>
         <Switch value={isAvailable} onValueChange={toggleAvailability} />
-      </View>
+      </View> */}
 
       <Button
         title="Edit Profile"
-        onPress={() => navigation.navigate('DeliverymanProfileEdit', { userEmail })}
+        onPress={() => navigation.navigate('DeliverymanProfileEdit')}
       />
     </View>
   );

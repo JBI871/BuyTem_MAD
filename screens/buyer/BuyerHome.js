@@ -1,5 +1,6 @@
 import React from 'react';
 import { Image, View, Text, Button, FlatList, TouchableOpacity } from 'react-native';
+import {portLink} from '../../navigation/AppNavigation'
 
 const items = [
   { id: '1', name: 'Item 1', price: 10, image: require('../../assets/400x400.png') },

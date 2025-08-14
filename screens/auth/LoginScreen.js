@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { portLink } from '../../navigation/AppNavigation';
 
 export default function LoginScreen({ setUserRole, setUserEmail, navigation }) {
   const [email, setEmail] = useState('');
@@ -13,18 +14,44 @@ export default function LoginScreen({ setUserRole, setUserEmail, navigation }) {
     }
 
     try {
-      const usersJSON = await AsyncStorage.getItem('users');
-      const users = usersJSON ? JSON.parse(usersJSON) : [];
+      console.log('Backend URL:', portLink());
 
-      const user = users.find(u => u.email === email && u.password === password);
+      const response = await fetch(`${portLink()}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
-      if (user) {
-        setUserRole(user.role);
-        setUserEmail(user.email); // Track logged-in user
-        Alert.alert('Success', `Logged in as ${user.role}`);
-      } else {
-        Alert.alert('Error', 'Invalid email or password');
+      const data = await response.json();
+
+      // Check if login failed
+      if (!response.ok) {
+        Alert.alert('Error', data.error || 'Login failed');
+        return;
       }
+
+      // Verify all required fields exist
+      if (!data.token || !data.id || !data.role) {
+        Alert.alert('Error', 'Login response incomplete. Please check your backend.');
+        console.log('Incomplete login response:', data);
+        return;
+      }
+
+      console.log('Frontend received:', data); // token, id, role
+
+      // Store values in AsyncStorage
+      await AsyncStorage.setItem('token', data.token);
+      await AsyncStorage.setItem('userId', data.id);
+      await AsyncStorage.setItem('userRole', data.role);
+
+      // Update parent state
+      if (setUserRole) setUserRole(data.role);
+      if (setUserEmail) setUserEmail(email);
+
+      Alert.alert('Success', `Logged in as ${data.role}`);
+
+      // Optionally navigate to protected screen
+      // navigation.replace('Home'); // uncomment and change 'Home' to your screen
     } catch (error) {
       console.log('Login error:', error);
       Alert.alert('Error', 'Something went wrong during login');

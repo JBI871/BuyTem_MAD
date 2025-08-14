@@ -1,6 +1,6 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
 
 const categoriesRouter = require('./routes/categories');
 const productsRouter = require('./routes/products');
@@ -16,6 +16,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const PORT = process.env.PORT || 5000; // ✅ Define PORT
+
 // Public routes
 app.use('/categories', categoriesRouter);
 app.use('/products', productsRouter);
@@ -23,13 +25,11 @@ app.use('/auth', authRouter);
 app.use('/users', usersRouter);
 
 // Protected routes
-
 app.use('/addresses', authenticateToken, addressesRouter);
 app.use('/cart', authenticateToken, cartRouter);
 app.use('/orders', authenticateToken, ordersRouter);
 app.use('/payment', authenticateToken, paymentRouter);
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });

@@ -4,7 +4,7 @@ const db = require('../config/firebase');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-// POST /auth/login
+
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -22,14 +22,23 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ userId: userDoc.id, email: user.email }, process.env.JWT_SECRET, {
-      expiresIn: '1h',
-    });
+    const token = jwt.sign(
+      { userId: userDoc.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
-    res.json({ token });
+    // Send token, user ID, and role
+    res.json({
+      token,
+      id: userDoc.id,
+      role: user.role
+    });
+    console.log(res);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
 module.exports = router;
+

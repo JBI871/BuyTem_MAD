@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
+import { portLink } from '../../navigation/AppNavigation';
 
 export default function SignupScreen({ navigation }) {
   const [name, setName] = useState('');
@@ -9,7 +10,7 @@ export default function SignupScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState('buyer'); // default role
-  const [image, setImage] = useState(null);
+  const [image, setImage] = useState('');
 
   const placeholderImage = require('../../assets/placeholderpp.png'); // your placeholder image
 
@@ -31,29 +32,45 @@ export default function SignupScreen({ navigation }) {
   };
 
   const handleSignup = async () => {
-    if (!email || !password || !name || !phone) {
-      Alert.alert('Error', 'All fields except image are required');
+  if (!email || !password || !name || !phone) {
+    Alert.alert('Error', 'All fields except image are required');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${portLink()}/users/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+        phone,
+        role: role || 'customer',
+        image: image ? image : '',
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      // Backend returned error
+      Alert.alert('Error', data.error || 'Signup failed');
       return;
     }
 
-    try {
-      const usersJSON = await AsyncStorage.getItem('users');
-      const users = usersJSON ? JSON.parse(usersJSON) : [];
+    Alert.alert('Success', 'User registered successfully');
 
-      if (users.find(u => u.email === email)) {
-        Alert.alert('Error', 'User already exists');
-        return;
-      }
+    // Optional: navigate back to login
+    navigation.goBack();
 
-      users.push({ name, email, password, phone, role, image: image || placeholderImage });
-      await AsyncStorage.setItem('users', JSON.stringify(users));
-
-      Alert.alert('Success', 'User registered successfully');
-      navigation.goBack();
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  } catch (error) {
+    console.log('Signup error:', error);
+    Alert.alert('Error', 'Something went wrong during signup');
+  }
+};
 
   return (
     <View style={styles.container}>
@@ -96,7 +113,7 @@ export default function SignupScreen({ navigation }) {
 
       <Text style={{ marginBottom:5 }}>Select Role:</Text>
       <View style={{ flexDirection:'row', marginBottom:20, justifyContent:'space-around', width:'100%' }}>
-        {['buyer','shopkeeper','deliveryman'].map(r => (
+        {['buyer','deliveryman'].map(r => (
           <Button
             key={r}
             title={r.charAt(0).toUpperCase() + r.slice(1)}

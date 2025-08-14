@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Image, View, Text, Button, FlatList, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {portLink} from '../../navigation/AppNavigation'
 
 export default function CartScreen({ navigation }) {
   const [cartItems, setCartItems] = useState([]);
