@@ -160,25 +160,25 @@ export default function ShopkeeperHome({ setUserRole }) {
   };
 
   const saveNewCategory = async () => {
-    if (!newCategoryName.trim()) return Alert.alert('Error','Category name cannot be empty');
+    if (!newCategoryName.trim()) return Alert.alert('Error', 'Category name cannot be empty');
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await fetch(`${portLink()}/categories/add`, {
         method: 'POST',
         headers: {
-          'Content-Type':'application/json',
-          'Authorization':`Bearer ${token}`
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ category_name: newCategoryName.trim() }),
       });
-      if(!response.ok) throw new Error('Failed to add category');
+      if (!response.ok) throw new Error('Failed to add category');
       setNewCategoryName('');
       setAddCategoryModalVisible(false);
       await fetchCategories();
-      Alert.alert('Success','Category added successfully');
-    } catch(err) {
+      Alert.alert('Success', 'Category added successfully');
+    } catch (err) {
       console.error(err);
-      Alert.alert('Error','Failed to add category');
+      Alert.alert('Error', 'Failed to add category');
     }
   };
 
@@ -190,7 +190,7 @@ export default function ShopkeeperHome({ setUserRole }) {
       >
         <Text style={{ color: '#fff' }}>{selected ? selected.category_name : 'Select Category'}</Text>
       </TouchableOpacity>
-      
+
       <TouchableOpacity
         style={[styles.modalInput, { width: 45, marginLeft: 8, justifyContent: 'center', alignItems: 'center', padding: 0 }]}
         onPress={() => setAddCategoryModalVisible(true)}
@@ -221,7 +221,7 @@ export default function ShopkeeperHome({ setUserRole }) {
   );
 
   return (
-    <LinearGradient colors={['#0f2027','#203a43','#2c5364']} style={styles.container}>
+    <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.container}>
       {/* Search */}
       <View style={styles.topArea}>
         <View style={styles.searchWrapper}>
@@ -266,22 +266,39 @@ export default function ShopkeeperHome({ setUserRole }) {
       {/* Bottom Buttons */}
       <View style={styles.bottomArea}>
         <TouchableOpacity style={styles.addButton} onPress={() => setAddModalVisible(true)}>
-          <LinearGradient colors={['#3a6b35','#2c4f25']} style={styles.addButtonGradient}>
+          <LinearGradient colors={['#3a6b35', '#2c4f25']} style={styles.addButtonGradient}>
             <Ionicons name="add" size={24} color="#fff" />
             <Text style={styles.addButtonText}>Add New Product</Text>
           </LinearGradient>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={() => setUserRole(null)}>
-          <LinearGradient colors={['#c0392b','#e74c3c']} style={styles.addButtonGradient}>
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={async () => {
+            // 1️⃣ Clear token
+            await AsyncStorage.removeItem('token');
+
+            // 2️⃣ Clear user state
+            setUserRole(null);
+            setUserEmail(null);
+
+            // 3️⃣ Reset navigation to Home
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Home' }],
+            });
+          }}
+        >
+          <LinearGradient colors={['#c0392b', '#e74c3c']} style={styles.addButtonGradient}>
             <Text style={styles.addButtonText}>Logout</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
 
+
       {/* Add Product Modal */}
       <Modal animationType="slide" transparent={true} visible={addModalVisible}>
-        <LinearGradient colors={['#0f2027','#203a43','#2c5364']} style={styles.modalContainer}>
+        <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.modalContainer}>
           <ScrollView contentContainerStyle={styles.modalContent}>
             <Text style={styles.modalTitle}>Add Product</Text>
 
@@ -307,13 +324,13 @@ export default function ShopkeeperHome({ setUserRole }) {
             <CategoryDropdown selected={newProduct.category} onSelect={(cat) => setNewProduct(prev => ({ ...prev, category: cat }))} />
 
             <View style={styles.modalButtonRow}>
-              <TouchableOpacity onPress={saveNewProduct} style={{ flex:1, marginRight:5 }}>
-                <LinearGradient colors={['#3a6b35','#2c4f25']} style={styles.addButtonGradient}>
+              <TouchableOpacity onPress={saveNewProduct} style={{ flex: 1, marginRight: 5 }}>
+                <LinearGradient colors={['#3a6b35', '#2c4f25']} style={styles.addButtonGradient}>
                   <Text style={styles.addButtonText}>Add Product</Text>
                 </LinearGradient>
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={() => setAddModalVisible(false)} style={[styles.addButtonGradient, { backgroundColor:'#e74c3c', flex:1, marginLeft:5 }]}>
+              <TouchableOpacity onPress={() => setAddModalVisible(false)} style={[styles.addButtonGradient, { backgroundColor: '#e74c3c', flex: 1, marginLeft: 5 }]}>
                 <Text style={styles.addButtonText}>Cancel</Text>
               </TouchableOpacity>
             </View>
@@ -323,7 +340,7 @@ export default function ShopkeeperHome({ setUserRole }) {
 
       {/* Edit Product Modal */}
       <Modal animationType="slide" transparent={true} visible={editModalVisible}>
-        <LinearGradient colors={['#0f2027','#203a43','#2c5364']} style={styles.modalContainer}>
+        <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.modalContainer}>
           <ScrollView contentContainerStyle={styles.modalContent}>
             <Text style={styles.modalTitle}>Edit Product</Text>
             {selectedProduct && (
@@ -346,16 +363,16 @@ export default function ShopkeeperHome({ setUserRole }) {
                 <Text style={styles.label}>Weight</Text>
                 <TextInput style={styles.modalInput} value={selectedProduct.weight} onChangeText={(text) => setSelectedProduct(prev => ({ ...prev, weight: text }))} />
 
-                
+
 
                 <View style={styles.modalButtonRow}>
-                  <TouchableOpacity onPress={saveChanges} style={{ flex:1, marginRight:5 }}>
-                    <LinearGradient colors={['#3a6b35','#2c4f25']} style={styles.addButtonGradient}>
+                  <TouchableOpacity onPress={saveChanges} style={{ flex: 1, marginRight: 5 }}>
+                    <LinearGradient colors={['#3a6b35', '#2c4f25']} style={styles.addButtonGradient}>
                       <Text style={styles.addButtonText}>Save</Text>
                     </LinearGradient>
                   </TouchableOpacity>
 
-                  <TouchableOpacity onPress={() => setEditModalVisible(false)} style={[styles.addButtonGradient, { backgroundColor:'#e74c3c', flex:1, marginLeft:5 }]}>
+                  <TouchableOpacity onPress={() => setEditModalVisible(false)} style={[styles.addButtonGradient, { backgroundColor: '#e74c3c', flex: 1, marginLeft: 5 }]}>
                     <Text style={styles.addButtonText}>Cancel</Text>
                   </TouchableOpacity>
                 </View>
@@ -367,7 +384,7 @@ export default function ShopkeeperHome({ setUserRole }) {
 
       {/* Add Category Modal */}
       <Modal visible={addCategoryModalVisible} animationType="slide">
-        <LinearGradient colors={['#0f2027','#203a43','#2c5364']} style={styles.modalContainer}>
+        <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add Category</Text>
             <TextInput
@@ -378,12 +395,12 @@ export default function ShopkeeperHome({ setUserRole }) {
               onChangeText={setNewCategoryName}
             />
             <View style={styles.modalButtonRow}>
-              <TouchableOpacity onPress={saveNewCategory} style={{ flex:1, marginRight:5 }}>
-                <LinearGradient colors={['#3a6b35','#2c4f25']} style={styles.addButtonGradient}>
+              <TouchableOpacity onPress={saveNewCategory} style={{ flex: 1, marginRight: 5 }}>
+                <LinearGradient colors={['#3a6b35', '#2c4f25']} style={styles.addButtonGradient}>
                   <Text style={styles.addButtonText}>Add</Text>
                 </LinearGradient>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => setAddCategoryModalVisible(false)} style={[styles.addButtonGradient, { backgroundColor:'#e74c3c', flex:1, marginLeft:5 }]}>
+              <TouchableOpacity onPress={() => setAddCategoryModalVisible(false)} style={[styles.addButtonGradient, { backgroundColor: '#e74c3c', flex: 1, marginLeft: 5 }]}>
                 <Text style={styles.addButtonText}>Cancel</Text>
               </TouchableOpacity>
             </View>
@@ -395,29 +412,29 @@ export default function ShopkeeperHome({ setUserRole }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex:1 },
+  container: { flex: 1 },
   topArea: { paddingTop: 20, paddingBottom: 10 },
-  searchWrapper: { flexDirection:'row', alignItems:'center', backgroundColor:'rgba(255,255,255,0.05)', borderRadius:10, marginHorizontal:20, paddingHorizontal:10, height:45 },
-  searchInput: { flex:1, color:'#fff', fontSize:16 },
-  productCard: { backgroundColor:'rgba(255,255,255,0.05)', borderRadius:10, padding:15, marginBottom:12, position:'relative' },
-  editIcon: { position:'absolute', top:10, right:10 },
-  removeButton: { position:'absolute', bottom:10, right:6, flexDirection:'row', alignItems:'center', paddingHorizontal:8, paddingVertical:4, borderRadius:6 },
-  productName: { color:'#fff', fontSize:16, fontWeight:'bold' },
-  productPrice: { color:'#fff', fontSize:14, marginTop:4 },
-  productDiscount: { color:'#fff', fontSize:14, marginTop:2 },
-  productQuantity: { color:'#fff', fontSize:14, marginTop:2 },
-  bottomArea: { position:'absolute', bottom:20, width:'100%', paddingHorizontal:20 },
-  addButton: { marginBottom:10 },
-  logoutButton: { marginBottom:10 },
-  addButtonGradient: { flexDirection:'row', alignItems:'center', justifyContent:'center', paddingVertical:12, borderRadius:10 },
-  addButtonText: { color:'#fff', fontWeight:'bold', marginLeft:6 },
-  modalContainer: { flex:1, justifyContent:'center', paddingHorizontal:20 },
-  modalContent: { backgroundColor:'rgba(255,255,255,0.05)', borderRadius:10, padding:20,marginVertical:30 },
-  modalTitle: { color:'#fff', fontSize:20, fontWeight:'bold', marginBottom:20 },
-  label: { color:'#fff', fontSize:14, marginBottom:6 },
-  modalInput: { backgroundColor:'rgba(255,255,255,0.1)', color:'#fff', paddingHorizontal:10, paddingVertical:8, borderRadius:8, marginBottom:10 },
-  modalButtonRow: { flexDirection:'row', marginTop:5, marginBottom:20 },
-  dropdownOverlay: { flex:1, backgroundColor:'rgba(0,0,0,0.5)', justifyContent:'center', alignItems:'center' },
-  dropdownSolid: { backgroundColor:'rgba(255,255,255,0.05)', width:'80%', borderRadius:10, maxHeight:300 },
-  dropdownItem: { paddingVertical:12, paddingHorizontal:15, borderBottomWidth:1, borderBottomColor:'rgba(255,255,255,0.1)' },
+  searchWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 10, marginHorizontal: 20, paddingHorizontal: 10, height: 45 },
+  searchInput: { flex: 1, color: '#fff', fontSize: 16 },
+  productCard: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: 15, marginBottom: 12, position: 'relative' },
+  editIcon: { position: 'absolute', top: 10, right: 10 },
+  removeButton: { position: 'absolute', bottom: 10, right: 6, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  productName: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  productPrice: { color: '#fff', fontSize: 14, marginTop: 4 },
+  productDiscount: { color: '#fff', fontSize: 14, marginTop: 2 },
+  productQuantity: { color: '#fff', fontSize: 14, marginTop: 2 },
+  bottomArea: { position: 'absolute', bottom: 20, width: '100%', paddingHorizontal: 20 },
+  addButton: { marginBottom: 10 },
+  logoutButton: { marginBottom: 10 },
+  addButtonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: 10 },
+  addButtonText: { color: '#fff', fontWeight: 'bold', marginLeft: 6 },
+  modalContainer: { flex: 1, justifyContent: 'center', paddingHorizontal: 20 },
+  modalContent: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: 20, marginVertical: 30 },
+  modalTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
+  label: { color: '#fff', fontSize: 14, marginBottom: 6 },
+  modalInput: { backgroundColor: 'rgba(255,255,255,0.1)', color: '#fff', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8, marginBottom: 10 },
+  modalButtonRow: { flexDirection: 'row', marginTop: 5, marginBottom: 20 },
+  dropdownOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+  dropdownSolid: { backgroundColor: 'rgba(255,255,255,0.05)', width: '80%', borderRadius: 10, maxHeight: 300 },
+  dropdownItem: { paddingVertical: 12, paddingHorizontal: 15, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.1)' },
 });
