@@ -3,9 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Activity
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { portLink } from '../navigation/AppNavigation';
+import { portLink } from '../../navigation/AppNavigation';
 
-export default function HomeScreen({ setUserRole, navigation }) {
+export default function BuyerHomeScreen({ setUserRole, navigation }) {
   const [search, setSearch] = useState('');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +62,7 @@ export default function HomeScreen({ setUserRole, navigation }) {
   const addToCart = async (productId, quantity) => {
     try {
       const token = await AsyncStorage.getItem('token');
+      const userId = await AsyncStorage.getItem('userId');
       if (!token) {
         Alert.alert('Error', 'You must be logged in to add products to cart');
         return;
@@ -75,7 +76,7 @@ export default function HomeScreen({ setUserRole, navigation }) {
       const response = await fetch(`${portLink()}/cart`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ user_id: token, product_id: productId, quantity }),
+        body: JSON.stringify({ user_id: userId, product_id: productId, quantity }),
       });
 
       if (!response.ok) throw new Error('Failed to add to cart');
@@ -250,7 +251,6 @@ export default function HomeScreen({ setUserRole, navigation }) {
               style={styles.logoutButton}
               onPress={async () => {
                 await AsyncStorage.removeItem('token');
-                await AsyncStorage.removeItem('userId');
                 setIsLoggedIn(false);
                 setUserRole(null);
               }}

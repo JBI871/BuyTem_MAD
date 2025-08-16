@@ -13,6 +13,7 @@ import ItemDetails from '../screens/buyer/ItemDetails';
 import OrderTracking from '../screens/buyer/OrderTracking';
 import BuyerProfile from '../screens/buyer/BuyerProfile';
 import BuyerProfileEdit from '../screens/buyer/BuyerProfileEdit';
+import BuyerHomeScreen from '../screens/buyer/BuyerHomePage';
 
 // Shopkeeper screens
 import ShopkeeperHome from '../screens/shopkeeper/ShopkeeperHome';
@@ -27,17 +28,27 @@ import DeliverymanProfile from '../screens/deliveryman/DeliverymanProfile';
 import DeliverymanProfileEdit from '../screens/deliveryman/DeliverymanProfileEdit';
 import DeliverymanOrderDetails from '../screens/deliveryman/DeliverymanOrderDetails';
 
+// Home screen (entry point)
+import HomeScreen from '../screens/home';
+
 const Stack = createNativeStackNavigator();
 
-export const portLink = () => 'http://192.168.8.40:6000'; // your backend URL & port
+export const portLink = () => 'http://192.168.37.26:5000'; // backend URL
 
+// Buyer stack
 function BuyerStack({ setUserRole, userEmail }) {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="BuyerHome" options={{ title: 'Home' }}>
-        {(props) => <BuyerHome {...props} setUserRole={setUserRole} userEmail={userEmail} />}
+      <Stack.Screen name="BuyerHomePage" options={{ title: 'Home' }}>
+        {(props) => (
+          <BuyerHomeScreen
+            {...props}
+            setUserRole={setUserRole}
+            userEmail={userEmail}
+          />
+        )}
       </Stack.Screen>
-      <Stack.Screen name="Cart" component={CartScreen} />
+      <Stack.Screen name='Cart' component={CartScreen} />
       <Stack.Screen name="ItemDetails" component={ItemDetails} />
       <Stack.Screen name="OrderTracking" component={OrderTracking} />
       <Stack.Screen name="BuyerProfile">
@@ -50,6 +61,7 @@ function BuyerStack({ setUserRole, userEmail }) {
   );
 }
 
+// Shopkeeper stack
 function ShopkeeperStack({ setUserRole }) {
   return (
     <Stack.Navigator>
@@ -63,10 +75,11 @@ function ShopkeeperStack({ setUserRole }) {
   );
 }
 
+// Deliveryman stack
 function DeliverymanStack({ setUserRole, userEmail }) {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="DeliverymanHome">
+      <Stack.Screen name="DeliverymanHome" options={{ title: 'Delivery Dashboard' }}>
         {(props) => <DeliverymanHome {...props} setUserRole={setUserRole} />}
       </Stack.Screen>
       <Stack.Screen name="OrderStatus" component={OrderStatus} />
@@ -76,13 +89,16 @@ function DeliverymanStack({ setUserRole, userEmail }) {
       <Stack.Screen name="DeliverymanProfileEdit">
         {(props) => <DeliverymanProfileEdit {...props} userEmail={userEmail} />}
       </Stack.Screen>
-      <Stack.Screen name="DeliverymanOrderDetails" component={DeliverymanOrderDetails} />
+      <Stack.Screen
+        name="DeliverymanOrderDetails"
+        component={DeliverymanOrderDetails}
+      />
     </Stack.Navigator>
   );
 }
 
 export default function AppNavigation() {
-  const [userRole, setUserRole] = useState(null);
+  const [userRole, setUserRole] = useState(null); 
   const [userEmail, setUserEmail] = useState(null);
 
   return (
@@ -90,6 +106,16 @@ export default function AppNavigation() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {userRole === null ? (
           <>
+            {/* Entry point = HomeScreen */}
+            <Stack.Screen name="Home" options={{ title: 'Home' }}>
+              {(props) => (
+                <HomeScreen
+                  {...props}
+                  setUserRole={null}
+                  setUserEmail={null}
+                />
+              )}
+            </Stack.Screen>
             <Stack.Screen name="Login">
               {(props) => (
                 <LoginScreen
@@ -103,27 +129,29 @@ export default function AppNavigation() {
           </>
         ) : userRole === 'customer' ? (
           <Stack.Screen name="BuyerStack">
-            {(props) => 
-              <BuyerStack 
-                {...props} 
-                setUserRole={setUserRole} 
-                userEmail={userEmail} 
+            {(props) => (
+              <BuyerStack
+                {...props}
+                setUserRole={setUserRole}
+                userEmail={userEmail}
               />
-            }
+            )}
           </Stack.Screen>
         ) : userRole === 'shopkeeper' ? (
           <Stack.Screen name="ShopkeeperStack">
-            {(props) => <ShopkeeperStack {...props} setUserRole={setUserRole} />}
+            {(props) => (
+              <ShopkeeperStack {...props} setUserRole={setUserRole} />
+            )}
           </Stack.Screen>
         ) : (
           <Stack.Screen name="DeliverymanStack">
-            {(props) => 
+            {(props) => (
               <DeliverymanStack
                 {...props}
                 setUserRole={setUserRole}
                 userEmail={userEmail}
               />
-            }
+            )}
           </Stack.Screen>
         )}
       </Stack.Navigator>
