@@ -1,5 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator, Modal, Alert, TouchableWithoutFeedback, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+  Modal,
+  Alert,
+  TouchableWithoutFeedback,
+  ScrollView,
+  RefreshControl
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -13,10 +26,11 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
+  const [cartCount, setCartCount] = useState(0); // Cart count state
+  const [refreshing, setRefreshing] = useState(false); // Pull-to-refresh state
 
   // Fetch products
   const fetchProducts = async () => {
-    setLoading(true);
     try {
       const response = await fetch(`${portLink()}/products`);
       if (!response.ok) throw new Error('Failed to fetch products');
@@ -25,8 +39,6 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
     } catch (error) {
       console.error('Fetch products error:', error);
       Alert.alert('Error', 'Failed to fetch products.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -48,10 +60,40 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
     setIsLoggedIn(!!token);
   };
 
+  // Fetch cart count
+  const fetchCartCount = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const userId = await AsyncStorage.getItem('userId');
+      if (!token) return;
+
+      const response = await fetch(`${portLink()}/cart/count/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch cart count');
+      const data = await response.json();
+      setCartCount(data.itemCount);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Pull-to-refresh function
+  const refreshAll = async () => {
+    setRefreshing(true);
+    await Promise.all([fetchProducts(), fetchCategories(), checkLogin(), fetchCartCount()]);
+    setRefreshing(false);
+  };
+
+  // Initial fetch
   useEffect(() => {
-    fetchProducts();
-    fetchCategories();
-    checkLogin();
+    const fetchData = async () => {
+      setLoading(true);
+      await refreshAll();
+      setLoading(false);
+    };
+    fetchData();
   }, []);
 
   const filteredProducts = products.filter(p =>
@@ -82,6 +124,7 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
       if (!response.ok) throw new Error('Failed to add to cart');
 
       Alert.alert('Success', 'Product added to cart');
+      fetchCartCount(); // update cart count
     } catch (err) {
       console.error(err);
       Alert.alert('Error', 'Could not add product to cart');
@@ -112,6 +155,9 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
           data={filteredProducts}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 150 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={refreshAll} colors={['#fff']} tintColor="#fff" />
+          }
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.productCard}
@@ -240,13 +286,36 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
           <>
             <TouchableOpacity
               style={styles.addButton}
+              onPress={() => navigation.navigate('BuyerProfile')}
+            >
+              <LinearGradient colors={['#2729aeff', '#7007e1ff']} style={styles.addButtonGradient}>
+                <Ionicons name="person-circle" size={20} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={styles.addButtonText}>Profile</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => navigation.navigate('OrderTracking')}
+            >
+              <LinearGradient colors={['#ae273bff', '#e19c07ff']} style={styles.addButtonGradient}>
+                <Ionicons name="reader" size={20} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={styles.addButtonText}>Orders</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.addButton}
               onPress={() => navigation.navigate('Cart')}
             >
               <LinearGradient colors={['#27ae60', '#2ecc71']} style={styles.addButtonGradient}>
                 <Ionicons name="cart" size={20} color="#fff" style={{ marginRight: 8 }} />
-                <Text style={styles.addButtonText}>Cart</Text>
+                <Text style={styles.addButtonText}>
+                  Cart {cartCount > 0 ? `(${cartCount})` : ''}
+                </Text>
               </LinearGradient>
             </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.logoutButton}
               onPress={async () => {
@@ -287,8 +356,6 @@ const styles = StyleSheet.create({
   modalTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
   modalText: { color: '#fff', fontSize: 16, marginBottom: 6 },
   closeIconWrapper: { position: 'absolute', top: 10, right: 10, zIndex: 10, padding: 5 },
-
-  // Quantity selector
   quantityWrapper: { marginVertical: 10, alignItems: 'center' },
   quantityControls: { flexDirection: 'row', alignItems: 'center', marginTop: 5, justifyContent: 'center' },
   quantityButton: { backgroundColor: 'rgba(255,255,255,0.1)', padding: 10, borderRadius: 6 },

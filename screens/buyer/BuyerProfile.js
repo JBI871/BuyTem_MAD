@@ -12,6 +12,7 @@ export default function BuyerProfile({ navigation }) {
     email: '',
     imageUri: null,
     addresses: [],
+    paymentMethods: [],
   });
 
   useEffect(() => {
@@ -25,21 +26,27 @@ export default function BuyerProfile({ navigation }) {
           return;
         }
 
+        // Fetch profile
         const resProfile = await fetch(`${portLink()}/users/by_id/${userId}`, {
-          headers: { 'Authorization': `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
         const dataProfile = await resProfile.json();
-        
         if (!resProfile.ok) {
           Alert.alert('Error', dataProfile.error || 'Failed to fetch profile');
           return;
         }
 
+        // Fetch addresses
         const resAddresses = await fetch(`${portLink()}/addresses/user/${userId}`, {
-          headers: { 'Authorization': `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
-        const dataAddresses = await resAddresses.json();
-        
+        const dataAddresses = resAddresses.ok ? await resAddresses.json() : [];
+
+        // Fetch payment methods
+        const resPayments = await fetch(`${portLink()}/payment/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const dataPayments = resPayments.ok ? await resPayments.json() : [];
 
         setProfile({
           name: dataProfile.name || '',
@@ -47,13 +54,8 @@ export default function BuyerProfile({ navigation }) {
           email: dataProfile.email || '',
           imageUri: dataProfile.image || null,
           addresses: dataAddresses || [],
+          paymentMethods: dataPayments || [],
         });
-        if(resAddresses.status === 404) {
-          return;
-        }
-        if (!resAddresses.ok) {
-          Alert.alert('Error', 'Failed to fetch addresses');
-        }
       } catch (err) {
         console.log('Fetch profile error:', err);
         Alert.alert('Error', 'Something went wrong while fetching profile');
@@ -88,29 +90,48 @@ export default function BuyerProfile({ navigation }) {
           <Text style={styles.infoText}>{profile.contact || 'N/A'}</Text>
         </View>
 
+        {/* Delivery Addresses */}
         <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Delivery Addresses:</Text>
         {profile.addresses.length === 0 ? (
           <Text style={{ color: '#ccc' }}>No addresses added</Text>
         ) : (
           <FlatList
-  data={profile.addresses}
-  keyExtractor={(item) => item.id.toString()}
-  renderItem={({ item }) => (
-    <TouchableOpacity
-      style={styles.addressCard}
-      onPress={() => {
-        // Optional: navigate to map or show location
-        console.log('Map for:', item.road);
-      }}
-    >
-      <Text style={styles.cardTitle}>{item.road}</Text>
-      <Text style={styles.cardText}>Building: {item.building_no}</Text>
-      <Text style={styles.cardText}>Floor: {item.floor_num}</Text>
-      <Text style={styles.cardText}>Apartment: {item.apartment_no}</Text>
-    </TouchableOpacity>
-  )}
-/>
+            data={profile.addresses}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <View style={styles.addressCard}>
+                <Text style={styles.cardTitle}>{item.road}</Text>
+                <Text style={styles.cardText}>Building: {item.building_no}</Text>
+                <Text style={styles.cardText}>Floor: {item.floor_num}</Text>
+                <Text style={styles.cardText}>Apartment: {item.apartment_no}</Text>
+              </View>
+            )}
+          />
+        )}
 
+        {/* Payment Methods */}
+        <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Payment Methods:</Text>
+        {profile.paymentMethods.length === 0 ? (
+          <Text style={{ color: '#ccc' }}>No payment methods added</Text>
+        ) : (
+          <FlatList
+            data={profile.paymentMethods}
+            keyExtractor={(item) => item.payment_id.toString()}
+            renderItem={({ item }) => (
+              <View style={styles.addressCard}>
+                <Text style={styles.cardTitle}>{item.payment_method}</Text>
+                {item.payment_method === 'Card' ? (
+                  <>
+                    <Text style={styles.cardText}>Card Number: {item.payment_credential.card_number}</Text>
+                    <Text style={styles.cardText}>Holder: {item.payment_credential.card_holder}</Text>
+                    <Text style={styles.cardText}>Expire: {item.payment_credential.expire_date}</Text>
+                  </>
+                ) : (
+                  <Text style={styles.cardText}>Bkash Number: {item.payment_credential.bkash_number}</Text>
+                )}
+              </View>
+            )}
+          />
         )}
 
         <TouchableOpacity
@@ -134,35 +155,17 @@ const styles = StyleSheet.create({
   infoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   infoText: { color: '#fff', fontSize: 16 },
   sectionTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff', alignSelf: 'flex-start', marginBottom: 10 },
-  addressBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 10,
-    marginBottom: 8,
-    width: '100%',
-  },
-  addressText: { color: '#fff', fontSize: 14 },
-  buttonWrapper: { marginTop: 20, width: '100%' },
-  button: { paddingVertical: 14, borderRadius: 10, alignItems: 'center' },
-  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
   addressCard: {
     backgroundColor: 'rgba(255,255,255,0.05)',
     paddingHorizontal: 70,
-    paddingVertical:15,
+    paddingVertical: 15,
     borderRadius: 10,
     marginBottom: 12,
     width: '100%',
   },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 6,
-  },
-  cardText: {
-    color: '#fff',
-    fontSize: 14,
-    marginBottom: 2,
-  },
+  cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#fff', marginBottom: 6 },
+  cardText: { color: '#fff', fontSize: 14, marginBottom: 2 },
+  buttonWrapper: { marginTop: 20, width: '100%' },
+  button: { paddingVertical: 14, borderRadius: 10, alignItems: 'center' },
+  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
 });

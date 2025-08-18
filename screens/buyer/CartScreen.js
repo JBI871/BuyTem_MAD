@@ -23,15 +23,37 @@ export default function CartScreen({ navigation }) {
         return;
       }
 
-      const response = await fetch(`${portLink()}/cart/${userId}`, {
+      const cartRes = await fetch(`${portLink()}/cart/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok) throw new Error('Failed to fetch cart');
+      if (!cartRes.ok) throw new Error('Failed to fetch cart');
+      const cartData = await cartRes.json();
 
-      const data = await response.json();
-      setCartItems(data.items);
-      setTotalAmount(data.total);
+      const itemsWithInfo = await Promise.all(
+        cartData.items.map(async (item) => {
+          const productRes = await fetch(`${portLink()}/products/${item.product_id}`);
+          if (!productRes.ok) throw new Error('Failed to fetch product info');
+          const product = await productRes.json();
+          const discount = product.discount || 0;
+          const finalPrice =
+            discount > 0 ? product.price - discount * 0.01 * product.price : product.price;
+
+          return {
+            product_id: item.product_id,
+            product_name: product.name,
+            product_price: product.price,
+            discount,
+            quantity: item.quantity,
+            item_total: finalPrice * item.quantity,
+          };
+        })
+      );
+
+      const total = itemsWithInfo.reduce((sum, item) => sum + item.item_total, 0);
+
+      setCartItems(itemsWithInfo);
+      setTotalAmount(total);
     } catch (err) {
       console.error(err);
       Alert.alert('Error', 'Could not fetch cart');
@@ -61,7 +83,6 @@ export default function CartScreen({ navigation }) {
 
       if (!response.ok) throw new Error('Failed to update quantity');
 
-      // Refresh cart after update
       fetchCart();
     } catch (err) {
       console.error(err);
@@ -81,7 +102,7 @@ export default function CartScreen({ navigation }) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ quantity: 0 }), // quantity 0 triggers removal
+        body: JSON.stringify({ quantity: 0 }),
       });
 
       if (!response.ok) throw new Error('Failed to remove item');
@@ -147,13 +168,17 @@ export default function CartScreen({ navigation }) {
           </>
         )}
 
-        <TouchableOpacity style={[styles.button, { marginTop: 10 }]} onPress={() => navigation.goBack()}>
-          <LinearGradient colors={['#0d8379ff', '#02696dff']} style={styles.buttonGradient}>
-            <Text style={styles.buttonText}>Checkout
-              
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
+        {/* Only show checkout button if cart has items */}
+        {cartItems.length > 0 && (
+          <TouchableOpacity
+            style={[styles.button, { marginTop: 10 }]}
+            onPress={() => navigation.navigate('Checkout')}
+          >
+            <LinearGradient colors={['#0d8379ff', '#02696dff']} style={styles.buttonGradient}>
+              <Text style={styles.buttonText}>Checkout</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity style={[styles.button, { marginTop: 10 }]} onPress={() => navigation.goBack()}>
           <LinearGradient colors={['#6b0f1a', '#b9131b']} style={styles.buttonGradient}>

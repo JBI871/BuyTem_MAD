@@ -4,8 +4,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { portLink } from '../../navigation/AppNavigation';
+import { useNavigation } from '@react-navigation/native';
+
+
 
 export default function ShopkeeperHome({ setUserRole }) {
+  const navigation = useNavigation();
   const [search, setSearch] = useState('');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,6 +21,8 @@ export default function ShopkeeperHome({ setUserRole }) {
 
   const [addCategoryModalVisible, setAddCategoryModalVisible] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [pendingCount, setPendingCount] = useState(0);
+
 
   const [newProduct, setNewProduct] = useState({
     name: '',
@@ -44,6 +50,21 @@ export default function ShopkeeperHome({ setUserRole }) {
     }
   };
 
+  const fetchPendingCount = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await fetch(`${portLink()}/orders/pending-count`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error('Failed to fetch pending count');
+      const data = await response.json();
+      setPendingCount(data.pendingCount || 0);
+    } catch (err) {
+      console.error('Error fetching pending count:', err);
+    }
+  };
+
+
   // Fetch categories
   const fetchCategories = async () => {
     try {
@@ -59,7 +80,9 @@ export default function ShopkeeperHome({ setUserRole }) {
   useEffect(() => {
     fetchProducts();
     fetchCategories();
+    fetchPendingCount();
   }, []);
+
 
   const filteredProducts = products.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase())
@@ -264,7 +287,25 @@ export default function ShopkeeperHome({ setUserRole }) {
       )}
 
       {/* Bottom Buttons */}
+
       <View style={styles.bottomArea}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate('AdminOrder')}
+        >
+          <LinearGradient colors={['#ae273bff', '#e19c07ff']} style={styles.addButtonGradient}>
+            <Ionicons name="reader" size={20} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.addButtonText}>Orders</Text>
+            {pendingCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{pendingCount}</Text>
+              </View>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+
+
+
         <TouchableOpacity style={styles.addButton} onPress={() => setAddModalVisible(true)}>
           <LinearGradient colors={['#3a6b35', '#2c4f25']} style={styles.addButtonGradient}>
             <Ionicons name="add" size={24} color="#fff" />
@@ -437,4 +478,15 @@ const styles = StyleSheet.create({
   dropdownOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
   dropdownSolid: { backgroundColor: 'rgba(255,255,255,0.05)', width: '80%', borderRadius: 10, maxHeight: 300 },
   dropdownItem: { paddingVertical: 12, paddingHorizontal: 15, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.1)' },
+  badge: {
+    backgroundColor: 'red',
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginLeft: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+
 });

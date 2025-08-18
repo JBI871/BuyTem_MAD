@@ -15,6 +15,24 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /products/:id - Fetch single product by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const docRef = db.collection('product').doc(id);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ error: `Product with ID ${id} not found` });
+    }
+
+    res.json({ id: doc.id, ...doc.data() });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 //GET /product?category_id=abc123
 router.get('/by_category', async (req, res) => {
   try {
