@@ -98,4 +98,23 @@ router.get('/user/:userId/:addressId', async (req, res) => {
   }
 });
 
+// GET /addresses/addressId
+router.get('/:addressId', async (req, res) => {
+  try {
+    const { addressId } = req.params;
+
+    const addressRef = db.collection('addresses').doc(addressId);
+    const doc = await addressRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ error: 'address not found' });
+    }
+
+    res.json({ id: doc.id, ...doc.data() });
+  } catch (error) {
+    console.error('Error fetching address by ID:', error);
+    res.status(500).json({ error: 'Failed to fetch address' });
+  }
+});
+
 module.exports = router;

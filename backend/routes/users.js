@@ -7,23 +7,37 @@ const authenticateToken = require('../middleware/auth');
 router.post('/auth/register', async (req, res) => {
   try {
     const data = req.body;
-    const snapshot = await db.collection('users').where('email', '==', data.email).get();
 
+    // Check if email already exists
+    const snapshot = await db.collection('users').where('email', '==', data.email).get();
     if (!snapshot.empty) {
       return res.status(400).json({ error: 'Email already in use' });
     }
+
+    // Set default role if not provided
     if (!data.role) {
       data.role = 'customer';
     }
+
+    // Set default profile image
     if (!data.image) {
       data.image = '../../../assets/placeholderpp.png';
     }
+
+    // Hash password if provided
     if (data.password) {
       const saltRounds = 10;
       data.password = await bcrypt.hash(data.password, saltRounds);
     }
 
+    // Add createdAt timestamp
     data.createdAt = new Date().toISOString();
+
+    // If the user is a deliveryman, set status to free
+    if (data.role === 'deliveryman') {
+      data.status = 'free';
+    }
+
     const docRef = await db.collection('users').add(data);
 
     res.status(201).json({ message: 'User created successfully', id: docRef.id });
@@ -31,6 +45,7 @@ router.post('/auth/register', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 router.use(authenticateToken);
 
