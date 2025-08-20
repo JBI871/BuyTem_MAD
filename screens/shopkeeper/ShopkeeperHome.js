@@ -41,7 +41,22 @@ export default function ShopkeeperHome({ setUserRole }) {
       const response = await fetch(`${portLink()}/products`);
       if (!response.ok) throw new Error('Failed to fetch products');
       const data = await response.json();
-      setProducts(data);
+
+      // Fetch ratings for each product
+      const productsWithRatings = await Promise.all(
+        data.map(async (product) => {
+          try {
+            const ratingRes = await fetch(`${portLink()}/ratings/${product.id}`);
+            const ratingData = await ratingRes.json();
+            return { ...product, rating: ratingData.rating, averageRating: ratingData.average };
+          } catch (err) {
+            console.error('Error fetching rating for product', product.id, err);
+            return { ...product, rating: null, averageRating: 0 };
+          }
+        })
+      );
+
+      setProducts(productsWithRatings);
     } catch (error) {
       console.error('Fetch products error:', error);
       Alert.alert('Error', 'Failed to fetch products.');
@@ -49,6 +64,7 @@ export default function ShopkeeperHome({ setUserRole }) {
       setLoading(false);
     }
   };
+
 
   const fetchPendingCount = async () => {
     try {
@@ -127,14 +143,21 @@ export default function ShopkeeperHome({ setUserRole }) {
           onPress: async () => {
             try {
               const token = await AsyncStorage.getItem('token');
+
+              // Delete rating first
+              await fetch(`${portLink()}/ratings/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` },
+              });
+
+              // Then delete product
               const response = await fetch(`${portLink()}/products/delete/${id}`, {
                 method: 'DELETE',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`,
-                },
+                headers: { 'Authorization': `Bearer ${token}` },
               });
+
               if (!response.ok) throw new Error('Failed to remove product');
+
               await fetchProducts();
               Alert.alert('Success', 'Product removed successfully');
             } catch (error) {
@@ -147,6 +170,7 @@ export default function ShopkeeperHome({ setUserRole }) {
     );
   };
 
+
   const saveNewProduct = async () => {
     if (!newProduct.category) {
       Alert.alert('Error', 'Please select a category.');
@@ -155,26 +179,27 @@ export default function ShopkeeperHome({ setUserRole }) {
     try {
       const token = await AsyncStorage.getItem('token');
       const payload = { ...newProduct, category: newProduct.category.id };
+
       const response = await fetch(`${portLink()}/products/add`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload),
       });
+
+      const data = await response.json();
+
       if (!response.ok) throw new Error('Failed to add product');
+
+      // Add initial rating
+      await fetch(`${portLink()}/ratings/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ id: data.id, count: 0, total: 0 })
+      });
+
       await fetchProducts();
       setAddModalVisible(false);
-      setNewProduct({
-        name: '',
-        price: 0,
-        discount: 0,
-        quantity: 0,
-        description: '',
-        weight: '',
-        category: null,
-      });
+      setNewProduct({ name: '', price: 0, discount: 0, quantity: 0, description: '', weight: '', category: null });
       Alert.alert('Success', 'Product added successfully');
     } catch (error) {
       console.error('Add product error:', error);
@@ -267,23 +292,34 @@ export default function ShopkeeperHome({ setUserRole }) {
           data={filteredProducts}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 150 }}
-          renderItem={({ item }) => (
-            <View style={styles.productCard}>
-              <Text style={styles.productName}>{item.name}</Text>
-              <Text style={styles.productPrice}>Price: ৳{item.price}</Text>
-              <Text style={styles.productDiscount}>Discount: {item.discount}%</Text>
-              <Text style={styles.productQuantity}>Quantity: {item.quantity}</Text>
+          renderItem={({ item }) => {
+            const averageRating =
+              item.rating && item.rating.count > 0
+                ? (item.rating.total / item.rating.count).toFixed(2)
+                : 'N/A';
 
-              <TouchableOpacity style={styles.editIcon} onPress={() => openEditModal(item)}>
-                <Ionicons name="create-outline" size={20} color="#fff" />
-              </TouchableOpacity>
+            return (
+              <View style={styles.productCard}>
+                <Text style={styles.productName}>{item.name}</Text>
+                <Text style={styles.productPrice}>Price: ৳{item.price}</Text>
+                <Text style={styles.productDiscount}>Discount: {item.discount}%</Text>
+                <Text style={styles.productQuantity}>Quantity: {item.quantity}</Text>
 
-              <TouchableOpacity style={styles.removeButton} onPress={() => removeProduct(item.id)}>
-                <Ionicons name="trash-outline" size={18} color="#fff" />
-              </TouchableOpacity>
-            </View>
-          )}
+                {/* Add this line for rating */}
+                <Text style={styles.productQuantity}>Rating: {averageRating}</Text>
+
+                <TouchableOpacity style={styles.editIcon} onPress={() => openEditModal(item)}>
+                  <Ionicons name="create-outline" size={20} color="#fff" />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.removeButton} onPress={() => removeProduct(item.id)}>
+                  <Ionicons name="trash-outline" size={18} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            );
+          }}
         />
+
       )}
 
       {/* Bottom Buttons */}

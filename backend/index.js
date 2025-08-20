@@ -11,6 +11,7 @@ const ordersRouter = require('./routes/orders');
 const paymentRouter = require('./routes/payment');
 const authRouter = require('./routes/auth');
 const confirmDelivery = require('./routes/confirmDeliver');
+const ratings=require('./routes/ratings');
 const authenticateToken = require('./middleware/auth');
 
 const app = express();
@@ -22,6 +23,7 @@ const PORT = process.env.PORT || 6000; // ✅ Define PORT
 // Public routes
 app.use('/categories', categoriesRouter);
 app.use('/products', productsRouter);
+app.use('/ratings',ratings);
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
 

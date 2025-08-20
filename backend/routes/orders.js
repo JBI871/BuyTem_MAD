@@ -206,5 +206,55 @@ router.get('/delivery/:id', async (req, res) => {
 });
 
 
+// GET /orders/delivered_unrated/:user_id
+router.get('/delivered_unrated/:user_id', async (req, res) => {
+  const { user_id } = req.params;
+
+  try {
+    const snapshot = await db
+      .collection('orders')
+      .where('status', '==', 'Delivered')
+      .where('user_id', '==', user_id)
+      .get();
+
+    // Filter client-side for orders where 'rated' field is missing
+    const orders = snapshot.docs
+      .map(doc => ({ order_id: doc.id, ...doc.data() }))
+      .filter(order => order.rated === undefined);
+
+    res.json({ count: orders.length, orders });
+  } catch (error) {
+    console.error('Error fetching delivered unrated orders for user:', error);
+    res.status(500).json({ error: 'Failed to fetch delivered unrated orders' });
+  }
+});
+
+// PUT /ratings/:order_id - Mark order as rated
+router.put('/rating_order/:order_id', async (req, res) => {
+  const { order_id } = req.params;
+
+  try {
+    const orderRef = db.collection('orders').doc(order_id);
+    const orderDoc = await orderRef.get();
+
+    if (!orderDoc.exists) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    // Set rated = "yes"
+    await orderRef.update({ rated: 'yes' });
+
+    res.json({
+      message: `Order ${order_id} marked as rated`,
+      order_id,
+      rated: 'yes'
+    });
+  } catch (error) {
+    console.error('Error updating order rating status:', error);
+    res.status(500).json({ error: 'Failed to mark order as rated' });
+  }
+});
+
+
 
 module.exports = router;
