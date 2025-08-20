@@ -4,8 +4,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { portLink } from '../../navigation/AppNavigation';
+import { useNavigation } from '@react-navigation/native';
+
+
 
 export default function ShopkeeperHome({ setUserRole }) {
+  const navigation = useNavigation();
   const [search, setSearch] = useState('');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,6 +21,8 @@ export default function ShopkeeperHome({ setUserRole }) {
 
   const [addCategoryModalVisible, setAddCategoryModalVisible] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [pendingCount, setPendingCount] = useState(0);
+
 
   const [newProduct, setNewProduct] = useState({
     name: '',
@@ -35,7 +41,22 @@ export default function ShopkeeperHome({ setUserRole }) {
       const response = await fetch(`${portLink()}/products`);
       if (!response.ok) throw new Error('Failed to fetch products');
       const data = await response.json();
-      setProducts(data);
+
+      // Fetch ratings for each product
+      const productsWithRatings = await Promise.all(
+        data.map(async (product) => {
+          try {
+            const ratingRes = await fetch(`${portLink()}/ratings/${product.id}`);
+            const ratingData = await ratingRes.json();
+            return { ...product, rating: ratingData.rating, averageRating: ratingData.average };
+          } catch (err) {
+            console.error('Error fetching rating for product', product.id, err);
+            return { ...product, rating: null, averageRating: 0 };
+          }
+        })
+      );
+
+      setProducts(productsWithRatings);
     } catch (error) {
       console.error('Fetch products error:', error);
       Alert.alert('Error', 'Failed to fetch products.');
@@ -43,6 +64,22 @@ export default function ShopkeeperHome({ setUserRole }) {
       setLoading(false);
     }
   };
+
+
+  const fetchPendingCount = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await fetch(`${portLink()}/orders/pending-count`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error('Failed to fetch pending count');
+      const data = await response.json();
+      setPendingCount(data.pendingCount || 0);
+    } catch (err) {
+      console.error('Error fetching pending count:', err);
+    }
+  };
+
 
   // Fetch categories
   const fetchCategories = async () => {
@@ -59,7 +96,9 @@ export default function ShopkeeperHome({ setUserRole }) {
   useEffect(() => {
     fetchProducts();
     fetchCategories();
+    fetchPendingCount();
   }, []);
+
 
   const filteredProducts = products.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase())
@@ -104,14 +143,21 @@ export default function ShopkeeperHome({ setUserRole }) {
           onPress: async () => {
             try {
               const token = await AsyncStorage.getItem('token');
+
+              // Delete rating first
+              await fetch(`${portLink()}/ratings/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` },
+              });
+
+              // Then delete product
               const response = await fetch(`${portLink()}/products/delete/${id}`, {
                 method: 'DELETE',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`,
-                },
+                headers: { 'Authorization': `Bearer ${token}` },
               });
+
               if (!response.ok) throw new Error('Failed to remove product');
+
               await fetchProducts();
               Alert.alert('Success', 'Product removed successfully');
             } catch (error) {
@@ -124,6 +170,7 @@ export default function ShopkeeperHome({ setUserRole }) {
     );
   };
 
+
   const saveNewProduct = async () => {
     if (!newProduct.category) {
       Alert.alert('Error', 'Please select a category.');
@@ -132,26 +179,27 @@ export default function ShopkeeperHome({ setUserRole }) {
     try {
       const token = await AsyncStorage.getItem('token');
       const payload = { ...newProduct, category: newProduct.category.id };
+
       const response = await fetch(`${portLink()}/products/add`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload),
       });
+
+      const data = await response.json();
+
       if (!response.ok) throw new Error('Failed to add product');
+
+      // Add initial rating
+      await fetch(`${portLink()}/ratings/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ id: data.id, count: 0, total: 0 })
+      });
+
       await fetchProducts();
       setAddModalVisible(false);
-      setNewProduct({
-        name: '',
-        price: 0,
-        discount: 0,
-        quantity: 0,
-        description: '',
-        weight: '',
-        category: null,
-      });
+      setNewProduct({ name: '', price: 0, discount: 0, quantity: 0, description: '', weight: '', category: null });
       Alert.alert('Success', 'Product added successfully');
     } catch (error) {
       console.error('Add product error:', error);
@@ -244,27 +292,56 @@ export default function ShopkeeperHome({ setUserRole }) {
           data={filteredProducts}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 150 }}
-          renderItem={({ item }) => (
-            <View style={styles.productCard}>
-              <Text style={styles.productName}>{item.name}</Text>
-              <Text style={styles.productPrice}>Price: ৳{item.price}</Text>
-              <Text style={styles.productDiscount}>Discount: {item.discount}%</Text>
-              <Text style={styles.productQuantity}>Quantity: {item.quantity}</Text>
+          renderItem={({ item }) => {
+            const averageRating =
+              item.rating && item.rating.count > 0
+                ? (item.rating.total / item.rating.count).toFixed(2)
+                : 'N/A';
 
-              <TouchableOpacity style={styles.editIcon} onPress={() => openEditModal(item)}>
-                <Ionicons name="create-outline" size={20} color="#fff" />
-              </TouchableOpacity>
+            return (
+              <View style={styles.productCard}>
+                <Text style={styles.productName}>{item.name}</Text>
+                <Text style={styles.productPrice}>Price: ৳{item.price}</Text>
+                <Text style={styles.productDiscount}>Discount: {item.discount}%</Text>
+                <Text style={styles.productQuantity}>Quantity: {item.quantity}</Text>
 
-              <TouchableOpacity style={styles.removeButton} onPress={() => removeProduct(item.id)}>
-                <Ionicons name="trash-outline" size={18} color="#fff" />
-              </TouchableOpacity>
-            </View>
-          )}
+                {/* Add this line for rating */}
+                <Text style={styles.productQuantity}>Rating: {averageRating}</Text>
+
+                <TouchableOpacity style={styles.editIcon} onPress={() => openEditModal(item)}>
+                  <Ionicons name="create-outline" size={20} color="#fff" />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.removeButton} onPress={() => removeProduct(item.id)}>
+                  <Ionicons name="trash-outline" size={18} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            );
+          }}
         />
+
       )}
 
       {/* Bottom Buttons */}
+
       <View style={styles.bottomArea}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate('AdminOrder')}
+        >
+          <LinearGradient colors={['#ae273bff', '#e19c07ff']} style={styles.addButtonGradient}>
+            <Ionicons name="reader" size={20} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.addButtonText}>Orders</Text>
+            {pendingCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{pendingCount}</Text>
+              </View>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+
+
+
         <TouchableOpacity style={styles.addButton} onPress={() => setAddModalVisible(true)}>
           <LinearGradient colors={['#3a6b35', '#2c4f25']} style={styles.addButtonGradient}>
             <Ionicons name="add" size={24} color="#fff" />
@@ -437,4 +514,15 @@ const styles = StyleSheet.create({
   dropdownOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
   dropdownSolid: { backgroundColor: 'rgba(255,255,255,0.05)', width: '80%', borderRadius: 10, maxHeight: 300 },
   dropdownItem: { paddingVertical: 12, paddingHorizontal: 15, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.1)' },
+  badge: {
+    backgroundColor: 'red',
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginLeft: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+
 });

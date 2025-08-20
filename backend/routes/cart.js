@@ -2,8 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/firebase');
 
-// POST /cart - Add or update one item in user's cart
-// POST /cart - Add a new cart item
+
 router.post('/', async (req, res) => {
   const { user_id, product_id, quantity } = req.body;
 
@@ -30,8 +29,8 @@ router.post('/', async (req, res) => {
     const newCart = {
       user_id,
       product_id,
-      product_name: product.name,
-      product_price: parseFloat(finalPrice.toFixed(2)), // discounted price if applicable
+      //product_name: product.name,
+      //product_price: parseFloat(finalPrice.toFixed(2)), // discounted price if applicable
       quantity,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -61,28 +60,47 @@ router.get('/:user_id', async (req, res) => {
       const data = doc.data();
       return {
         product_id: data.product_id,
-        product_name: data.product_name,
-        product_price: data.product_price,
+        //product_name: data.product_name,
+        //product_price: data.product_price,
         quantity: data.quantity,
-        discount: data.discount || 0,
-        item_total: (data.product_price - (data.discount || 0) * 0.01 * data.product_price) * data.quantity,
+        //discount: data.discount || 0,
+        //item_total: (data.product_price - (data.discount || 0) * 0.01 * data.product_price) * data.quantity,
       };
     });
 
     // Calculate total
-    const total = items.reduce((sum, item) => sum + item.item_total, 0);
+    //const total = items.reduce((sum, item) => sum + item.item_total, 0);
 
     // Return response (empty cart is okay)
     res.json({
       user_id,
       items, // will be [] if no items
-      total, // will be 0 if no items
+      //total, // will be 0 if no items
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
 });
+
+// GET /cart/count/:user_id - Get number of items in user's cart
+router.get('/count/:user_id', async (req, res) => {
+  const { user_id } = req.params;
+
+  try {
+    const cartQuery = await db.collection('carts').where('user_id', '==', user_id).get();
+
+    const itemCount = cartQuery.size; // number of documents returned
+
+    res.json({
+      itemCount
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 
 router.put('/:user_id/:product_id', async (req, res) => {

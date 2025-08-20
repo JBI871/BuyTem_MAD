@@ -9,7 +9,7 @@ import SignupScreen from '../screens/auth/SignupScreen';
 // Buyer screens
 import BuyerHome from '../screens/buyer/BuyerHome';
 import CartScreen from '../screens/buyer/CartScreen';
-import ItemDetails from '../screens/buyer/ItemDetails';
+import CheckOutScreen from '../screens/buyer/Checkout';
 import OrderTracking from '../screens/buyer/OrderTracking';
 import BuyerProfile from '../screens/buyer/BuyerProfile';
 import BuyerProfileEdit from '../screens/buyer/BuyerProfileEdit';
@@ -20,6 +20,7 @@ import ShopkeeperHome from '../screens/shopkeeper/ShopkeeperHome';
 import InventoryScreen from '../screens/shopkeeper/InventoryScreen';
 import ManageDeliverymen from '../screens/shopkeeper/ManageDeliverymen';
 import ShopPolicies from '../screens/shopkeeper/ShopPolicies';
+import AdminOrder from '../screens/shopkeeper/AdminOrder';
 
 // Deliveryman screens
 import DeliverymanHome from '../screens/deliveryman/DeliverymanHome';
@@ -27,13 +28,13 @@ import OrderStatus from '../screens/deliveryman/OrderStatus';
 import DeliverymanProfile from '../screens/deliveryman/DeliverymanProfile';
 import DeliverymanProfileEdit from '../screens/deliveryman/DeliverymanProfileEdit';
 import DeliverymanOrderDetails from '../screens/deliveryman/DeliverymanOrderDetails';
-
+import CurrentDelivery from '../screens/deliveryman/CurrentDelivery';
 // Home screen (entry point)
 import HomeScreen from '../screens/home';
 
 const Stack = createNativeStackNavigator();
 
-export const portLink = () => 'http://192.168.0.111:6000'; // backend URL
+export const portLink = () => 'http://192.168.37.26:5000'; // backend URL
 
 // Buyer stack
 function BuyerStack({ setUserRole, userEmail }) {
@@ -49,7 +50,7 @@ function BuyerStack({ setUserRole, userEmail }) {
         )}
       </Stack.Screen>
       <Stack.Screen name='Cart' component={CartScreen} />
-      <Stack.Screen name="ItemDetails" component={ItemDetails} />
+      <Stack.Screen name="Checkout" component={CheckOutScreen} />
       <Stack.Screen name="OrderTracking" component={OrderTracking} />
       <Stack.Screen name="BuyerProfile">
         {(props) => <BuyerProfile {...props} userEmail={userEmail} />}
@@ -68,6 +69,7 @@ function ShopkeeperStack({ setUserRole }) {
       <Stack.Screen name="ShopkeeperHome" options={{ title: 'Shop Dashboard' }}>
         {(props) => <ShopkeeperHome {...props} setUserRole={setUserRole} />}
       </Stack.Screen>
+      <Stack.Screen name="AdminOrder" component={AdminOrder} />
       <Stack.Screen name="Inventory" component={InventoryScreen} />
       <Stack.Screen name="ManageDeliverymen" component={ManageDeliverymen} />
       <Stack.Screen name="ShopPolicies" component={ShopPolicies} />
@@ -82,6 +84,7 @@ function DeliverymanStack({ setUserRole, userEmail }) {
       <Stack.Screen name="DeliverymanHome" options={{ title: 'Delivery Dashboard' }}>
         {(props) => <DeliverymanHome {...props} setUserRole={setUserRole} />}
       </Stack.Screen>
+      <Stack.Screen name="CurrentDelivery" component={(props) => <CurrentDelivery {...props} setUserRole={setUserRole} />} />
       <Stack.Screen name="OrderStatus" component={OrderStatus} />
       <Stack.Screen name="DeliverymanProfile">
         {(props) => <DeliverymanProfile {...props} userEmail={userEmail} />}
