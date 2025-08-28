@@ -59,7 +59,7 @@ export default function LoginScreen({ setUserRole, setUserEmail, navigation }) {
 
   return (
     <LinearGradient
-      colors={['#1E1E2E', '#121212']}
+      colors={['#F3E9DC', '#F3E9DC']}
       style={{ flex: 1 }}
     >
       <KeyboardAvoidingView
@@ -67,12 +67,12 @@ export default function LoginScreen({ setUserRole, setUserEmail, navigation }) {
         style={styles.container}
       >
         <View style={styles.card}>
-          <Text style={styles.title}>Welcome Back 👋</Text>
+          <Text style={styles.title}>Welcome To BuyTem!</Text>
           <Text style={styles.subtitle}>Login to continue</Text>
 
           <TextInput
             placeholder="Email"
-            placeholderTextColor="#aaa"
+            placeholderTextColor="#8B6F5E"
             value={email}
             onChangeText={setEmail}
             style={styles.input}
@@ -81,7 +81,7 @@ export default function LoginScreen({ setUserRole, setUserEmail, navigation }) {
           />
           <TextInput
             placeholder="Password"
-            placeholderTextColor="#aaa"
+            placeholderTextColor="#8B6F5E"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -90,7 +90,7 @@ export default function LoginScreen({ setUserRole, setUserEmail, navigation }) {
 
           <TouchableOpacity onPress={handleLogin} style={styles.buttonWrapper}>
             <LinearGradient
-              colors={['#6C63FF', '#514BC3']}
+              colors={['#D96F32', '#C75D2C']}
               style={styles.button}
             >
               <Text style={styles.buttonText}>Login</Text>
@@ -116,38 +116,38 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   card: {
-    backgroundColor: '#1E1E2E',
+    backgroundColor: '#fff',
     borderRadius: 15,
     padding: 25,
     shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     textAlign: 'center',
-    color: '#fff',
+    color: '#D96F32',
   },
   subtitle: {
     fontSize: 14,
     textAlign: 'center',
-    color: '#bbb',
+    color: '#8B6F5E',
     marginBottom: 20,
     marginTop: 5,
   },
   input: {
     width: '100%',
-    borderWidth: 1,
-    borderColor: '#333',
-    backgroundColor: '#2A2A3C',
+    borderWidth: 1.5,
+    borderColor: '#F8B259',
+    backgroundColor: '#F3E9DC',
     marginBottom: 12,
     padding: 12,
     borderRadius: 10,
     fontSize: 16,
-    color: '#fff',
+    color: '#2C2C2C',
   },
   buttonWrapper: {
     marginTop: 5,
@@ -169,10 +169,10 @@ const styles = StyleSheet.create({
     marginTop: 15,
   },
   signupText: {
-    color: '#bbb',
+    color: '#8B6F5E',
   },
   signupLink: {
-    color: '#6C63FF',
+    color: '#C75D2C',
     fontWeight: 'bold',
   },
 });

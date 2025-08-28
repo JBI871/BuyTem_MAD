@@ -11,7 +11,7 @@ const items = [
 
 export default function BuyerHome({ navigation, setUserRole, userEmail }) {
   return (
-    <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.container}>
+    <LinearGradient colors={['#F3E9DC', '#F8B259', '#D96F32']} style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.title}>Buyer Home</Text>
 
@@ -37,25 +37,25 @@ export default function BuyerHome({ navigation, setUserRole, userEmail }) {
         />
 
         <TouchableOpacity onPress={() => navigation.navigate('BuyerProfile', { email: userEmail })} style={styles.buttonWrapper}>
-          <LinearGradient colors={['#3a6b35', '#2c4f25']} style={styles.button}>
+          <LinearGradient colors={['#D96F32', '#C75D2C']} style={styles.button}>
             <Text style={styles.buttonText}>Profile</Text>
           </LinearGradient>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate('Cart')} style={styles.buttonWrapper}>
-          <LinearGradient colors={['#3a6b35', '#2c4f25']} style={styles.button}>
+          <LinearGradient colors={['#D96F32', '#C75D2C']} style={styles.button}>
             <Text style={styles.buttonText}>View Cart</Text>
           </LinearGradient>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate('OrderTracking')} style={styles.buttonWrapper}>
-          <LinearGradient colors={['#3a6b35', '#2c4f25']} style={styles.button}>
+          <LinearGradient colors={['#D96F32', '#C75D2C']} style={styles.button}>
             <Text style={styles.buttonText}>Track Orders</Text>
           </LinearGradient>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => setUserRole(null)} style={styles.buttonWrapper}>
-          <LinearGradient colors={['#7a1f1f', '#4d0f0f']} style={styles.button}>
+          <LinearGradient colors={['#C75D2C', '#8B3E1A']} style={styles.button}>
             <Text style={styles.buttonText}>Logout</Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -71,36 +71,65 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#8B3E1A',
     marginBottom: 20,
     textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   itemCard: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(243, 233, 220, 0.9)',
     padding: 15,
     marginBottom: 12,
     borderRadius: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
+    shadowColor: '#C75D2C',
+    shadowOpacity: 0.2,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 3 },
     elevation: 4,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(215, 111, 50, 0.3)',
   },
-  itemImage: { width: 60, height: 60, borderRadius: 10, marginRight: 15 },
+  itemImage: { 
+    width: 60, 
+    height: 60, 
+    borderRadius: 10, 
+    marginRight: 15,
+    borderWidth: 2,
+    borderColor: '#D96F32'
+  },
   itemInfo: { flex: 1 },
-  itemName: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
-  itemPrice: { fontSize: 14, color: '#aaa', marginTop: 4 },
+  itemName: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: '#8B3E1A'
+  },
+  itemPrice: { 
+    fontSize: 14, 
+    color: '#C75D2C', 
+    marginTop: 4,
+    fontWeight: '600'
+  },
   buttonWrapper: { marginBottom: 12 },
   button: {
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',
+    shadowColor: '#8B3E1A',
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   buttonText: {
-    color: '#fff',
+    color: '#F3E9DC',
     fontWeight: 'bold',
     fontSize: 16,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
 });

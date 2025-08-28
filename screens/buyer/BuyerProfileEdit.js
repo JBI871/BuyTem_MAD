@@ -152,38 +152,58 @@ export default function BuyerProfileEdit({ route, navigation }) {
   };
 
   return (
-    <LinearGradient colors={['#0f2027','#203a43','#2c5364']} style={styles.container}>
+    <LinearGradient colors={['#F3E9DC', '#F8B259', '#D96F32']} style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.title}>Edit Profile</Text>
 
-        <TouchableOpacity onPress={pickImage}>
+        <TouchableOpacity onPress={pickImage} style={styles.imageContainer}>
           <Image source={imageUri ? { uri:imageUri } : require('../../assets/placeholderpp.png')} style={styles.image} />
-          <Text style={{ color:'#1e90ff', marginBottom:10, textAlign:'center' }}>Change Image</Text>
+          <View style={styles.changeImageButton}>
+            <Ionicons name="camera" size={20} color="#8B3E1A" />
+            <Text style={styles.changeImageText}>Change Image</Text>
+          </View>
         </TouchableOpacity>
 
         <View style={styles.inputWrapper}>
-          <Ionicons name="person-outline" size={20} color="#fff" style={styles.icon} />
-          <TextInput placeholder="Name" placeholderTextColor="#ccc" value={name} onChangeText={setName} style={styles.input} />
+          <Ionicons name="person-outline" size={20} color="#8B3E1A" style={styles.icon} />
+          <TextInput 
+            placeholder="Name" 
+            placeholderTextColor="#C75D2C" 
+            value={name} 
+            onChangeText={setName} 
+            style={styles.input} 
+          />
         </View>
 
         <View style={styles.inputWrapper}>
-          <Ionicons name="call-outline" size={20} color="#fff" style={styles.icon} />
-          <TextInput placeholder="Contact" placeholderTextColor="#ccc" value={contact} onChangeText={setContact} style={styles.input} />
+          <Ionicons name="call-outline" size={20} color="#8B3E1A" style={styles.icon} />
+          <TextInput 
+            placeholder="Contact" 
+            placeholderTextColor="#C75D2C" 
+            value={contact} 
+            onChangeText={setContact} 
+            style={styles.input} 
+          />
         </View>
 
         {/* Addresses Section */}
-        <Text style={[styles.sectionTitle,{ marginTop:20 }]}>Addresses</Text>
-        {addresses.length === 0 ? <Text style={{ color:'#ccc' }}>No addresses added</Text> : (
+        <Text style={[styles.sectionTitle, { marginTop:20 }]}>Addresses</Text>
+        {addresses.length === 0 ? (
+          <Text style={styles.noDataText}>No addresses added</Text>
+        ) : (
           <FlatList
             data={addresses}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               <View style={styles.addressCard}>
                 <TouchableOpacity style={styles.removeIcon} onPress={() => handleRemoveAddress(item.id)}>
-                  <Ionicons name="trash-outline" size={22} color="red" />
+                  <Ionicons name="trash-outline" size={22} color="#C75D2C" />
                 </TouchableOpacity>
                 <View style={{ paddingRight:30 }}>
-                  <Text style={styles.cardTitle}>{item.road}</Text>
+                  <View style={styles.cardHeader}>
+                    <Ionicons name="location-outline" size={16} color="#8B3E1A" style={{ marginRight: 6 }} />
+                    <Text style={styles.cardTitle}>{item.road}</Text>
+                  </View>
                   <Text style={styles.cardText}>Building: {item.building_no}</Text>
                   <Text style={styles.cardText}>Floor: {item.floor_num}</Text>
                   <Text style={styles.cardText}>Apartment: {item.apartment_no}</Text>
@@ -192,23 +212,34 @@ export default function BuyerProfileEdit({ route, navigation }) {
             )}
           />
         )}
-        <TouchableOpacity onPress={() => setShowAddressModal(true)} style={{marginVertical:10}}>
-          <Text style={{color:'#1e90ff', fontWeight:'bold', textAlign:'center'}}>Add New Address</Text>
+        <TouchableOpacity onPress={() => setShowAddressModal(true)} style={styles.addButton}>
+          <Ionicons name="add-circle-outline" size={20} color="#D96F32" style={{ marginRight: 6 }} />
+          <Text style={styles.addButtonText}>Add New Address</Text>
         </TouchableOpacity>
 
         {/* Payment Methods Section */}
-        <Text style={[styles.sectionTitle,{ marginTop:20 }]}>Payment Methods</Text>
-        {paymentMethods.length === 0 ? <Text style={{ color:'#ccc' }}>No payment methods added</Text> : (
+        <Text style={[styles.sectionTitle, { marginTop:20 }]}>Payment Methods</Text>
+        {paymentMethods.length === 0 ? (
+          <Text style={styles.noDataText}>No payment methods added</Text>
+        ) : (
           <FlatList
             data={paymentMethods}
             keyExtractor={(item) => item.payment_id}
             renderItem={({ item }) => (
               <View style={styles.addressCard}>
                 <TouchableOpacity style={styles.removeIcon} onPress={() => handleRemovePayment(item.payment_id)}>
-                  <Ionicons name="trash-outline" size={22} color="red" />
+                  <Ionicons name="trash-outline" size={22} color="#C75D2C" />
                 </TouchableOpacity>
                 <View style={{ paddingRight:30 }}>
-                  <Text style={styles.cardTitle}>{item.payment_method}</Text>
+                  <View style={styles.cardHeader}>
+                    <Ionicons 
+                      name={item.payment_method === 'Card' ? 'card-outline' : 'phone-portrait-outline'} 
+                      size={16} 
+                      color="#8B3E1A" 
+                      style={{ marginRight: 6 }} 
+                    />
+                    <Text style={styles.cardTitle}>{item.payment_method}</Text>
+                  </View>
                   {item.payment_method === 'Card' ? (
                     <>
                       <Text style={styles.cardText}>Card Number: {item.payment_credential.card_number}</Text>
@@ -223,12 +254,14 @@ export default function BuyerProfileEdit({ route, navigation }) {
             )}
           />
         )}
-        <TouchableOpacity onPress={() => setShowPaymentModal(true)} style={{marginVertical:10}}>
-          <Text style={{color:'#1e90ff', fontWeight:'bold', textAlign:'center'}}>Add Payment Method</Text>
+        <TouchableOpacity onPress={() => setShowPaymentModal(true)} style={styles.addButton}>
+          <Ionicons name="add-circle-outline" size={20} color="#D96F32" style={{ marginRight: 6 }} />
+          <Text style={styles.addButtonText}>Add Payment Method</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={saveProfile} style={styles.button}>
-          <LinearGradient colors={['#3a6b35','#2c4f25']} style={styles.buttonGradient}>
+          <LinearGradient colors={['#D96F32', '#C75D2C']} style={styles.buttonGradient}>
+            <Ionicons name="checkmark-circle-outline" size={20} color="#F3E9DC" style={{ marginRight: 8 }} />
             <Text style={styles.buttonText}>Save Profile</Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -236,18 +269,46 @@ export default function BuyerProfileEdit({ route, navigation }) {
         {/* Address Modal */}
         <Modal visible={showAddressModal} transparent={true} animationType="slide">
           <View style={styles.modalOverlay}>
-            <LinearGradient colors={['#0f2027','#203a43','#2c5364']} style={styles.modalContent}>
+            <LinearGradient colors={['#F3E9DC', '#F8B259', '#D96F32']} style={styles.modalContent}>
               <Text style={styles.modalTitle}>Add New Address</Text>
-              <TextInput placeholder="Road" placeholderTextColor="#ccc" style={styles.modalInput} value={newAddress.road} onChangeText={text => setNewAddress({ ...newAddress, road: text })} />
-              <TextInput placeholder="Building No" placeholderTextColor="#ccc" style={styles.modalInput} value={newAddress.building_no} onChangeText={text => setNewAddress({ ...newAddress, building_no: text })} />
-              <TextInput placeholder="Floor No" placeholderTextColor="#ccc" style={styles.modalInput} value={newAddress.floor_num} onChangeText={text => setNewAddress({ ...newAddress, floor_num: text })} />
-              <TextInput placeholder="Apartment No" placeholderTextColor="#ccc" style={styles.modalInput} value={newAddress.apartment_no} onChangeText={text => setNewAddress({ ...newAddress, apartment_no: text })} />
+              <TextInput 
+                placeholder="Road" 
+                placeholderTextColor="#C75D2C" 
+                style={styles.modalInput} 
+                value={newAddress.road} 
+                onChangeText={text => setNewAddress({ ...newAddress, road: text })} 
+              />
+              <TextInput 
+                placeholder="Building No" 
+                placeholderTextColor="#C75D2C" 
+                style={styles.modalInput} 
+                value={newAddress.building_no} 
+                onChangeText={text => setNewAddress({ ...newAddress, building_no: text })} 
+              />
+              <TextInput 
+                placeholder="Floor No" 
+                placeholderTextColor="#C75D2C" 
+                style={styles.modalInput} 
+                value={newAddress.floor_num} 
+                onChangeText={text => setNewAddress({ ...newAddress, floor_num: text })} 
+              />
+              <TextInput 
+                placeholder="Apartment No" 
+                placeholderTextColor="#C75D2C" 
+                style={styles.modalInput} 
+                value={newAddress.apartment_no} 
+                onChangeText={text => setNewAddress({ ...newAddress, apartment_no: text })} 
+              />
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
-                <TouchableOpacity onPress={() => setShowAddressModal(false)} style={[styles.modalButton, { backgroundColor: 'gray' }]}>
-                  <Text style={styles.modalButtonText}>Cancel</Text>
+                <TouchableOpacity onPress={() => setShowAddressModal(false)}>
+                  <LinearGradient colors={['#C75D2C', '#8B3E1A']} style={[styles.modalButton, { backgroundColor: 'transparent' }]}>
+                    <Text style={styles.modalButtonText}>Cancel</Text>
+                  </LinearGradient>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={handleAddAddress} style={styles.modalButton}>
-                  <Text style={styles.modalButtonText}>Save</Text>
+                <TouchableOpacity onPress={handleAddAddress}>
+                  <LinearGradient colors={['#D96F32', '#C75D2C']} style={styles.modalButton}>
+                    <Text style={styles.modalButtonText}>Save</Text>
+                  </LinearGradient>
                 </TouchableOpacity>
               </View>
             </LinearGradient>
@@ -257,32 +318,44 @@ export default function BuyerProfileEdit({ route, navigation }) {
         {/* Payment Modal */}
         <Modal visible={showPaymentModal} transparent={true} animationType="slide">
           <View style={styles.modalOverlay}>
-            <LinearGradient colors={['#0f2027','#203a43','#2c5364']} style={styles.modalContent}>
+            <LinearGradient colors={['#F3E9DC', '#F8B259', '#D96F32']} style={styles.modalContent}>
               <Text style={styles.modalTitle}>Add Payment Method</Text>
-              <View style={{ flexDirection:'row', justifyContent:'space-around', marginBottom:10 }}>
-                <TouchableOpacity onPress={() => setNewPayment({ ...newPayment, type:'Card' })}>
-                  <Text style={{ color: newPayment.type==='Card' ? '#1e90ff':'#fff', fontWeight:'bold' }}>Card</Text>
+              <View style={styles.paymentTypeSelector}>
+                <TouchableOpacity 
+                  onPress={() => setNewPayment({ ...newPayment, type:'Card' })}
+                  style={[styles.paymentTypeButton, newPayment.type === 'Card' && styles.activePaymentType]}
+                >
+                  <Ionicons name="card-outline" size={20} color={newPayment.type === 'Card' ? '#F3E9DC' : '#8B3E1A'} />
+                  <Text style={[styles.paymentTypeText, { color: newPayment.type === 'Card' ? '#F3E9DC' : '#8B3E1A' }]}>Card</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => setNewPayment({ ...newPayment, type:'Bkash' })}>
-                  <Text style={{ color: newPayment.type==='Bkash' ? '#1e90ff':'#fff', fontWeight:'bold' }}>Bkash</Text>
+                <TouchableOpacity 
+                  onPress={() => setNewPayment({ ...newPayment, type:'Bkash' })}
+                  style={[styles.paymentTypeButton, newPayment.type === 'Bkash' && styles.activePaymentType]}
+                >
+                  <Ionicons name="phone-portrait-outline" size={20} color={newPayment.type === 'Bkash' ? '#F3E9DC' : '#8B3E1A'} />
+                  <Text style={[styles.paymentTypeText, { color: newPayment.type === 'Bkash' ? '#F3E9DC' : '#8B3E1A' }]}>Bkash</Text>
                 </TouchableOpacity>
               </View>
-              {newPayment.type==='Card' ? (
+              {newPayment.type === 'Card' ? (
                 <>
-                  <TextInput placeholder="Card Number" placeholderTextColor="#ccc" style={styles.modalInput} value={newPayment.card_number} onChangeText={text => setNewPayment({...newPayment, card_number:text})}/>
-                  <TextInput placeholder="Card Holder Name" placeholderTextColor="#ccc" style={styles.modalInput} value={newPayment.card_holder} onChangeText={text => setNewPayment({...newPayment, card_holder:text})}/>
-                  <TextInput placeholder="Security Code" placeholderTextColor="#ccc" style={styles.modalInput} value={newPayment.security_code} onChangeText={text => setNewPayment({...newPayment, security_code:text})}/>
-                  <TextInput placeholder="Expire Date" placeholderTextColor="#ccc" style={styles.modalInput} value={newPayment.expire_date} onChangeText={text => setNewPayment({...newPayment, expire_date:text})}/>
+                  <TextInput placeholder="Card Number" placeholderTextColor="#C75D2C" style={styles.modalInput} value={newPayment.card_number} onChangeText={text => setNewPayment({...newPayment, card_number:text})}/>
+                  <TextInput placeholder="Card Holder Name" placeholderTextColor="#C75D2C" style={styles.modalInput} value={newPayment.card_holder} onChangeText={text => setNewPayment({...newPayment, card_holder:text})}/>
+                  <TextInput placeholder="Security Code" placeholderTextColor="#C75D2C" style={styles.modalInput} value={newPayment.security_code} onChangeText={text => setNewPayment({...newPayment, security_code:text})}/>
+                  <TextInput placeholder="Expire Date" placeholderTextColor="#C75D2C" style={styles.modalInput} value={newPayment.expire_date} onChangeText={text => setNewPayment({...newPayment, expire_date:text})}/>
                 </>
               ) : (
-                <TextInput placeholder="Bkash Number" placeholderTextColor="#ccc" style={styles.modalInput} value={newPayment.bkash_number} onChangeText={text => setNewPayment({...newPayment, bkash_number:text})}/>
+                <TextInput placeholder="Bkash Number" placeholderTextColor="#C75D2C" style={styles.modalInput} value={newPayment.bkash_number} onChangeText={text => setNewPayment({...newPayment, bkash_number:text})}/>
               )}
               <View style={{ flexDirection:'row', justifyContent:'space-between', marginTop:20 }}>
-                <TouchableOpacity onPress={()=>setShowPaymentModal(false)} style={[styles.modalButton,{ backgroundColor:'gray' }]}>
-                  <Text style={styles.modalButtonText}>Cancel</Text>
+                <TouchableOpacity onPress={() => setShowPaymentModal(false)}>
+                  <LinearGradient colors={['#C75D2C', '#8B3E1A']} style={[styles.modalButton, { backgroundColor: 'transparent' }]}>
+                    <Text style={styles.modalButtonText}>Cancel</Text>
+                  </LinearGradient>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={handleAddPayment} style={styles.modalButton}>
-                  <Text style={styles.modalButtonText}>Save</Text>
+                <TouchableOpacity onPress={handleAddPayment}>
+                  <LinearGradient colors={['#D96F32', '#C75D2C']} style={styles.modalButton}>
+                    <Text style={styles.modalButtonText}>Save</Text>
+                  </LinearGradient>
                 </TouchableOpacity>
               </View>
             </LinearGradient>
@@ -295,72 +368,228 @@ export default function BuyerProfileEdit({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container:{ flex:1 },
-  scroll:{ padding:20, alignItems:'center' },
-  title:{ fontSize:28, fontWeight:'bold', color:'#fff', marginBottom:20 },
-  image:{ width:120, height:120, borderRadius:60, marginBottom:10, borderWidth:2, borderColor:'#fff' },
-  inputWrapper:{ flexDirection:'row', alignItems:'center', width:'100%', marginBottom:10, backgroundColor:'rgba(255,255,255,0.05)', borderRadius:8, paddingHorizontal:10 },
-  icon:{ marginRight:8 },
-  input:{ flex:1, color:'#fff', paddingVertical:8 },
-  sectionTitle:{ fontSize:20, fontWeight:'bold', color:'#fff', alignSelf:'flex-start', marginBottom:10 },
-  button:{ width:'100%', marginVertical:5 },
-  buttonGradient:{ paddingVertical:14, borderRadius:10, alignItems:'center' },
-  buttonText:{ color:'#fff', fontWeight:'bold', fontSize:16 },
+  container: { flex: 1 },
+  scroll: { padding: 20, alignItems: 'center' },
+  title: { 
+    fontSize: 28, 
+    fontWeight: 'bold', 
+    color: '#8B3E1A', 
+    marginBottom: 20,
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  imageContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  image: { 
+    width: 120, 
+    height: 120, 
+    borderRadius: 60, 
+    marginBottom: 10, 
+    borderWidth: 3, 
+    borderColor: '#D96F32'
+  },
+  changeImageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(243, 233, 220, 0.8)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#D96F32',
+  },
+  changeImageText: { 
+    color: '#8B3E1A', 
+    marginLeft: 4, 
+    fontWeight: '600'
+  },
+  inputWrapper: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    width: '100%', 
+    marginBottom: 12, 
+    backgroundColor: 'rgba(243, 233, 220, 0.9)', 
+    borderRadius: 10, 
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(215, 111, 50, 0.3)',
+  },
+  icon: { marginRight: 8 },
+  input: { flex: 1, color: '#8B3E1A', paddingVertical: 12, fontWeight: '500' },
+  sectionTitle: { 
+    fontSize: 20, 
+    fontWeight: 'bold', 
+    color: '#8B3E1A', 
+    alignSelf: 'flex-start', 
+    marginBottom: 10,
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  noDataText: { 
+    color: '#C75D2C', 
+    fontStyle: 'italic',
+    alignSelf: 'flex-start',
+    marginBottom: 10,
+  },
+  button: { width: '100%', marginVertical: 5 },
+  buttonGradient: { 
+    paddingVertical: 14, 
+    borderRadius: 10, 
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    shadowColor: '#8B3E1A',
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  buttonText: { 
+    color: '#F3E9DC', 
+    fontWeight: 'bold', 
+    fontSize: 16,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
   addressCard: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    paddingLeft: 70,
-    paddingRight: 70,
+    backgroundColor: 'rgba(243, 233, 220, 0.9)',
+    paddingLeft: 15,
+    paddingRight: 15,
     paddingVertical: 15,
-    borderRadius: 10,
+    borderRadius: 12,
     marginBottom: 12,
     width: '100%',
     position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(215, 111, 50, 0.3)',
+    shadowColor: '#C75D2C',
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
   },
   removeIcon: {
     position: 'absolute',
     top: 10,
     right: 10,
     zIndex: 1,
+    backgroundColor: 'rgba(243, 233, 220, 0.9)',
+    borderRadius: 15,
+    padding: 4,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
   },
   cardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 6,
+    color: '#8B3E1A',
+    flex: 1,
   },
   cardText: {
-    color: '#fff',
+    color: '#C75D2C',
     fontSize: 14,
     marginBottom: 2,
+    fontWeight: '500',
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 10,
+    backgroundColor: 'rgba(243, 233, 220, 0.8)',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#D96F32',
+  },
+  addButtonText: {
+    color: '#D96F32',
+    fontWeight: 'bold',
+    textAlign: 'center'
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.7)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
     width: '90%',
-    borderRadius: 10,
+    borderRadius: 15,
     padding: 20,
+    borderWidth: 2,
+    borderColor: '#C75D2C',
   },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 15, color: '#fff' },
+  modalTitle: { 
+    fontSize: 20, 
+    fontWeight: 'bold', 
+    marginBottom: 15, 
+    color: '#8B3E1A',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
   modalInput: {
     borderWidth: 1,
-    borderColor: '#555',
-    borderRadius: 8,
-    padding: 10,
+    borderColor: '#D96F32',
+    borderRadius: 10,
+    padding: 12,
     marginBottom: 10,
-    color: '#fff',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    color: '#8B3E1A',
+    backgroundColor: 'rgba(243, 233, 220, 0.9)',
+    fontWeight: '500',
   },
   modalButton: {
     flex: 1,
-    backgroundColor: '#3a6b35',
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: 'center',
     marginHorizontal: 5,
+    shadowColor: '#8B3E1A',
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
-  modalButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  modalButtonText: { 
+    color: '#F3E9DC', 
+    fontWeight: 'bold', 
+    fontSize: 16,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  paymentTypeSelector: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-around', 
+    marginBottom: 15 
+  },
+  paymentTypeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#8B3E1A',
+    backgroundColor: 'rgba(243, 233, 220, 0.5)',
+  },
+  activePaymentType: {
+    backgroundColor: '#C75D2C',
+    borderColor: '#8B3E1A',
+  },
+  paymentTypeText: {
+    fontWeight: 'bold',
+    marginLeft: 6,
+  },
 });

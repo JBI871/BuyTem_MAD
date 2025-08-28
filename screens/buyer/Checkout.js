@@ -20,7 +20,6 @@ export default function CheckoutScreen({ navigation }) {
 
   const [tip, setTip] = useState(0);
 
-
   
   // Fetch Cart
 const fetchCart = async () => {
@@ -76,7 +75,6 @@ const fetchCart = async () => {
     setLoading(false);
   }
 };
-
 
   // Fetch Addresses
   const fetchAddresses = async () => {
@@ -202,14 +200,14 @@ const fetchCart = async () => {
   };
 
   return (
-    <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.container}>
+    <LinearGradient colors={['#F3E9DC', '#F8B259', '#D96F32']} style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.title}>Checkout</Text>
 
         {loading ? (
-          <Text style={{ color: '#ccc', marginTop: 20 }}>Loading...</Text>
+          <Text style={styles.loadingText}>Loading...</Text>
         ) : cartItems.length === 0 ? (
-          <Text style={{ color: '#ccc', marginTop: 20 }}>Your cart is empty.</Text>
+          <Text style={styles.emptyText}>Your cart is empty.</Text>
         ) : (
           <>
             <FlatList
@@ -240,7 +238,7 @@ const fetchCart = async () => {
                   <Text style={styles.modalTitle}>Select Address</Text>
                   <ScrollView>
                     {addresses.length === 0 ? (
-                      <Text style={{ color: '#ccc', marginVertical: 10 }}>No addresses available</Text>
+                      <Text style={styles.modalEmptyText}>No addresses available</Text>
                     ) : addresses.map((addr, idx) => (
                       <TouchableOpacity key={idx} onPress={() => { setSelectedAddress(addr); setAddressModalVisible(false); }} style={styles.addressCard}>
                         <Text style={styles.cardTitle}>{addr.road}</Text>
@@ -251,18 +249,18 @@ const fetchCart = async () => {
                     ))}
                   </ScrollView>
                   <TouchableOpacity onPress={() => setAddressModalVisible(false)} style={styles.modalClose}>
-                    <Text style={{ color: '#fff' }}>Close</Text>
+                    <Text style={styles.modalCloseText}>Close</Text>
                   </TouchableOpacity>
                 </View>
               </View>
             </Modal>
 
             <View style={styles.tipContainer}>
-              <Text style={{ color: '#fff', marginBottom: 5 }}>Tip Amount:</Text>
+              <Text style={styles.tipLabel}>Tip Amount:</Text>
               <TextInput
                 keyboardType="numeric"
                 placeholder="Enter tip amount"
-                placeholderTextColor="#ccc"
+                placeholderTextColor="#8B4513"
                 style={styles.tipInput}
                 value={tip.toString()}
                 onChangeText={val => setTip(Number(val))}
@@ -286,7 +284,7 @@ const fetchCart = async () => {
                     ))}
                   </ScrollView>
                   <TouchableOpacity onPress={() => setPaymentModalVisible(false)} style={styles.modalClose}>
-                    <Text style={{ color: '#fff' }}>Close</Text>
+                    <Text style={styles.modalCloseText}>Close</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -295,13 +293,13 @@ const fetchCart = async () => {
             <Text style={styles.total}>Total: ৳{(totalAmount + (tip || 0)).toFixed(2)}</Text>
 
             <TouchableOpacity style={styles.button} onPress={placeOrder} disabled={placingOrder || !selectedAddress || !selectedPayment}>
-              <LinearGradient colors={placingOrder || !selectedAddress || !selectedPayment ? ['#555', '#777'] : ['#3a6b35', '#2c4f25']} style={styles.buttonGradient}>
+              <LinearGradient colors={placingOrder || !selectedAddress || !selectedPayment ? ['#A0A0A0', '#808080'] : ['#D96F32', '#C75D2C']} style={styles.buttonGradient}>
                 <Text style={styles.buttonText}>{placingOrder ? 'Placing Order...' : 'Place Order'}</Text>
               </LinearGradient>
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.button, { marginTop: 10 }]} onPress={() => navigation.goBack()}>
-              <LinearGradient colors={['#6b0f1a', '#b9131b']} style={styles.buttonGradient}>
+              <LinearGradient colors={['#C75D2C', '#A0562B']} style={styles.buttonGradient}>
                 <Text style={styles.buttonText}>Back</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -315,25 +313,221 @@ const fetchCart = async () => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { padding: 20 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 20, textAlign: 'center' },
-  card: { backgroundColor: 'rgba(255,255,255,0.05)', padding: 15, borderRadius: 12, marginBottom: 12 },
-  itemName: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
-  itemPrice: { fontSize: 14, color: '#fff', marginTop: 4 },
-  itemQuantity: { fontSize: 14, color: '#fff', marginTop: 2 },
-  selectorButton: { backgroundColor: 'rgba(255,255,255,0.05)', padding: 12, borderRadius: 10, marginBottom: 12 },
-  selectorText: { color: '#fff' },
-  fieldLabel: { color: '#fff', fontWeight: 'bold', marginBottom: 5, fontSize: 14 },
-  tipContainer: { marginBottom: 12 },
-  tipInput: { borderWidth: 1, borderColor: '#fff', borderRadius: 8, padding: 8, color: '#fff' },
-  total: { fontSize: 18, fontWeight: 'bold', color: '#fff', textAlign: 'right', marginTop: 10 },
-  button: { width: '100%', borderRadius: 10, marginTop: 20 },
-  buttonGradient: { paddingVertical: 14, borderRadius: 10, alignItems: 'center' },
-  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  modalContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { backgroundColor: '#203a43', width: '80%', maxHeight: '70%', borderRadius: 10, padding: 20 },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#fff', marginBottom: 10 },
-  addressCard: { backgroundColor: 'rgba(255,255,255,0.15)', padding: 12, borderRadius: 10, marginBottom: 12 },
-  cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#fff', marginBottom: 4 },
-  cardText: { color: '#fff', fontSize: 14, marginBottom: 2 },
-  modalClose: { marginTop: 10, backgroundColor: '#3a6b35', padding: 10, borderRadius: 8, alignItems: 'center' },
+  title: { 
+    fontSize: 28, 
+    fontWeight: 'bold', 
+    color: '#5D2A1A', 
+    marginBottom: 20, 
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  card: { 
+    backgroundColor: 'rgba(255,255,255,0.9)', 
+    padding: 16, 
+    borderRadius: 16, 
+    marginBottom: 12,
+    shadowColor: '#D96F32',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(217, 111, 50, 0.2)',
+  },
+  itemName: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: '#5D2A1A',
+    marginBottom: 4,
+  },
+  itemPrice: { 
+    fontSize: 14, 
+    color: '#D96F32', 
+    marginTop: 4,
+    fontWeight: '600',
+  },
+  itemQuantity: { 
+    fontSize: 14, 
+    color: '#8B4513', 
+    marginTop: 2 
+  },
+  selectorButton: { 
+    backgroundColor: 'rgba(255,255,255,0.9)', 
+    padding: 14, 
+    borderRadius: 12, 
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(217, 111, 50, 0.3)',
+    shadowColor: '#D96F32',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  selectorText: { 
+    color: '#5D2A1A',
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  fieldLabel: { 
+    color: '#5D2A1A', 
+    fontWeight: 'bold', 
+    marginBottom: 8, 
+    fontSize: 16,
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+  },
+  tipContainer: { 
+    marginBottom: 15,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(217, 111, 50, 0.2)',
+  },
+  tipLabel: {
+    color: '#5D2A1A',
+    fontWeight: 'bold',
+    marginBottom: 8,
+    fontSize: 16,
+  },
+  tipInput: { 
+    borderWidth: 2, 
+    borderColor: '#D96F32', 
+    borderRadius: 10, 
+    padding: 12, 
+    color: '#5D2A1A',
+    backgroundColor: '#fff',
+    fontSize: 15,
+  },
+  total: { 
+    fontSize: 20, 
+    fontWeight: 'bold', 
+    color: '#5D2A1A', 
+    textAlign: 'right', 
+    marginTop: 15,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    padding: 14,
+    borderRadius: 12,
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+    borderWidth: 2,
+    borderColor: '#F8B259',
+  },
+  button: { 
+    width: '100%', 
+    borderRadius: 14, 
+    marginTop: 20,
+    shadowColor: '#C75D2C',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  buttonGradient: { 
+    paddingVertical: 16, 
+    borderRadius: 14, 
+    alignItems: 'center' 
+  },
+  buttonText: { 
+    color: '#fff', 
+    fontWeight: 'bold', 
+    fontSize: 16,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  loadingText: {
+    color: '#8B4513',
+    marginTop: 20,
+    textAlign: 'center',
+    fontSize: 16,
+    fontStyle: 'italic',
+  },
+  emptyText: {
+    color: '#8B4513',
+    marginTop: 20,
+    textAlign: 'center',
+    fontSize: 16,
+    fontStyle: 'italic',
+  },
+  modalContainer: { 
+    flex: 1, 
+    backgroundColor: 'rgba(0,0,0,0.5)', 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
+  modalContent: { 
+    backgroundColor: '#F3E9DC', 
+    width: '85%', 
+    maxHeight: '70%', 
+    borderRadius: 16, 
+    padding: 20,
+    borderWidth: 2,
+    borderColor: '#D96F32',
+    shadowColor: '#C75D2C',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  modalTitle: { 
+    fontSize: 20, 
+    fontWeight: 'bold', 
+    color: '#5D2A1A', 
+    marginBottom: 15,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  addressCard: { 
+    backgroundColor: 'rgba(217, 111, 50, 0.1)', 
+    padding: 14, 
+    borderRadius: 12, 
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(217, 111, 50, 0.3)',
+  },
+  cardTitle: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: '#5D2A1A', 
+    marginBottom: 4 
+  },
+  cardText: { 
+    color: '#8B4513', 
+    fontSize: 14, 
+    marginBottom: 2 
+  },
+  modalClose: { 
+    marginTop: 15, 
+    backgroundColor: '#D96F32', 
+    padding: 12, 
+    borderRadius: 10, 
+    alignItems: 'center',
+    shadowColor: '#C75D2C',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  modalCloseText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  modalEmptyText: {
+    color: '#8B4513',
+    marginVertical: 10,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
 });

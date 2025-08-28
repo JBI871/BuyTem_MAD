@@ -78,11 +78,24 @@ export default function OrderTracking() {
     }
   };
 
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'pending': return '#F8B259';
+      case 'confirmed': return '#D96F32';
+      case 'picked up': return '#C75D2C';
+      case 'delivered': return '#2ecc71';
+      case 'cancelled': return '#e74c3c';
+      default: return '#F8B259';
+    }
+  };
+
   const renderOrderItem = ({ item }) => (
     <View style={styles.orderItem}>
       <Text style={styles.itemName}>{item.product_name}</Text>
-      <Text style={styles.itemPrice}>৳{item.item_total?.toFixed(2) || 0}</Text>
-      <Text style={styles.itemQuantity}>Quantity: {item.quantity}</Text>
+      <View style={styles.itemRow}>
+        <Text style={styles.itemPrice}>৳{item.item_total?.toFixed(2) || 0}</Text>
+        <Text style={styles.itemQuantity}>Qty: {item.quantity}</Text>
+      </View>
     </View>
   );
 
@@ -99,14 +112,24 @@ export default function OrderTracking() {
 
     return (
       <View style={styles.card}>
-        <Text style={styles.orderTitle}>Order Date: {formattedDate}</Text>
-        <FlatList
-          data={item.items}
-          keyExtractor={(i, idx) => idx.toString()}
-          renderItem={renderOrderItem}
-        />
-        <View style={styles.statusTotalContainer}>
-          <Text style={styles.itemStatus}>{item.status || 'Pending'}</Text>
+        <View style={styles.orderHeader}>
+          <Text style={styles.orderTitle}>Order Date</Text>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+            <Text style={styles.statusText}>{item.status || 'Pending'}</Text>
+          </View>
+        </View>
+        <Text style={styles.orderDate}>{formattedDate}</Text>
+        
+        <View style={styles.itemsContainer}>
+          <Text style={styles.itemsLabel}>Items:</Text>
+          <FlatList
+            data={item.items}
+            keyExtractor={(i, idx) => idx.toString()}
+            renderItem={renderOrderItem}
+          />
+        </View>
+
+        <View style={styles.totalContainer}>
           <Text style={styles.total}>Total: ৳{item.total?.toFixed(2) || 0}</Text>
         </View>
 
@@ -115,10 +138,12 @@ export default function OrderTracking() {
             style={styles.detailsButton}
             onPress={() => {
               setSelectedOrder(item);
-              fetchDeliveryManInfo(item.deliveryManId, item.order_id); // <-- FIXED here
+              fetchDeliveryManInfo(item.deliveryManId, item.order_id);
             }}
           >
-            <Text style={styles.detailsButtonText}>Details</Text>
+            <LinearGradient colors={['#D96F32', '#C75D2C']} style={styles.detailsButtonGradient}>
+              <Text style={styles.detailsButtonText}>View Delivery Details</Text>
+            </LinearGradient>
           </TouchableOpacity>
         )}
       </View>
@@ -126,20 +151,23 @@ export default function OrderTracking() {
   };
 
   return (
-    <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.container}>
+    <LinearGradient colors={['#F3E9DC', '#F8B259', '#D96F32']} style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.title}>Order Tracking</Text>
 
         {loading ? (
-          <ActivityIndicator size="large" color="#fff" style={{ marginTop: 20 }} />
+          <ActivityIndicator size="large" color="#D96F32" style={styles.loadingIndicator} />
         ) : orders.length === 0 ? (
-          <Text style={{ color: '#ccc', marginTop: 20 }}>No orders placed yet.</Text>
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No orders placed yet.</Text>
+          </View>
         ) : (
           <FlatList
             data={orders}
             keyExtractor={(item, index) => index.toString()}
             renderItem={renderOrder}
             contentContainerStyle={{ paddingBottom: 20 }}
+            showsVerticalScrollIndicator={false}
           />
         )}
 
@@ -147,24 +175,36 @@ export default function OrderTracking() {
         <Modal visible={modalVisible} transparent={true} animationType="slide">
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Delivery Man Details</Text>
+              <Text style={styles.modalTitle}>Delivery Person Details</Text>
               {deliveryManInfo.name ? (
-                <>
-                  <Text>Name: {deliveryManInfo.name}</Text>
-                  <Text>Email: {deliveryManInfo.email}</Text>
-                  <Text>Phone: {deliveryManInfo.phone}</Text>
-                  <Text style={{ marginTop: 5, fontWeight: 'bold' }}>
-                    Confirmation Code: {deliveryManInfo.confirmationCode}
-                  </Text>
-                </>
+                <View style={styles.deliveryInfo}>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Name:</Text>
+                    <Text style={styles.infoValue}>{deliveryManInfo.name}</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Email:</Text>
+                    <Text style={styles.infoValue}>{deliveryManInfo.email}</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Phone:</Text>
+                    <Text style={styles.infoValue}>{deliveryManInfo.phone}</Text>
+                  </View>
+                  <View style={[styles.infoRow, styles.confirmationRow]}>
+                    <Text style={styles.infoLabel}>Confirmation Code:</Text>
+                    <Text style={styles.confirmationCode}>{deliveryManInfo.confirmationCode}</Text>
+                  </View>
+                </View>
               ) : (
-                <ActivityIndicator size="large" color="#000" style={{ marginTop: 20 }} />
+                <ActivityIndicator size="large" color="#D96F32" style={styles.modalLoading} />
               )}
               <Pressable
                 style={styles.closeButton}
                 onPress={() => setModalVisible(false)}
               >
-                <Text style={styles.closeButtonText}>Close</Text>
+                <LinearGradient colors={['#C75D2C', '#A0562B']} style={styles.closeButtonGradient}>
+                  <Text style={styles.closeButtonText}>Close</Text>
+                </LinearGradient>
               </Pressable>
             </View>
           </View>
@@ -177,43 +217,254 @@ export default function OrderTracking() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { padding: 20 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 20, textAlign: 'center' },
+  title: { 
+    fontSize: 28, 
+    fontWeight: 'bold', 
+    color: '#5D2A1A', 
+    marginBottom: 20, 
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
   card: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 20,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 16,
+    shadowColor: '#D96F32',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(217, 111, 50, 0.2)',
   },
-  orderTitle: { fontSize: 16, fontWeight: 'bold', color: '#fff', marginBottom: 10 },
-  orderItem: {
-    flexDirection: 'column',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 8,
-  },
-  itemName: { fontSize: 14, fontWeight: 'bold', color: '#fff' },
-  itemPrice: { fontSize: 12, color: '#fff', marginTop: 2 },
-  itemQuantity: { fontSize: 12, color: '#fff', marginTop: 2 },
-  itemStatus: { fontSize: 14, fontWeight: 'bold', color: '#fff', textAlign: 'left' },
-  total: { fontSize: 14, fontWeight: 'bold', color: '#fff', textAlign: 'right' },
-  statusTotalContainer: {
+  orderHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 5,
+    marginBottom: 8,
   },
-  detailsButton: {
-    marginTop: 10,
-    backgroundColor: '#28a745',
-    paddingVertical: 8,
-    borderRadius: 8,
+  orderTitle: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: '#5D2A1A',
+  },
+  orderDate: {
+    fontSize: 14,
+    color: '#8B4513',
+    marginBottom: 12,
+    fontStyle: 'italic',
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#fff',
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+  },
+  itemsContainer: {
+    marginVertical: 12,
+  },
+  itemsLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#5D2A1A',
+    marginBottom: 8,
+  },
+  orderItem: {
+    backgroundColor: 'rgba(217, 111, 50, 0.08)',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 6,
+    borderLeft: 3,
+    borderLeftColor: '#D96F32',
+  },
+  itemName: { 
+    fontSize: 14, 
+    fontWeight: '600', 
+    color: '#5D2A1A',
+    marginBottom: 4,
+  },
+  itemRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  detailsButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
-  modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
-  modalContent: { width: '85%', backgroundColor: '#fff', borderRadius: 10, padding: 20 },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
-  closeButton: { marginTop: 15, backgroundColor: '#ff3333', padding: 10, borderRadius: 8, alignItems: 'center' },
-  closeButtonText: { color: '#fff', fontWeight: 'bold' },
+  itemPrice: { 
+    fontSize: 14, 
+    color: '#D96F32',
+    fontWeight: 'bold',
+  },
+  itemQuantity: { 
+    fontSize: 12, 
+    color: '#8B4513',
+    backgroundColor: 'rgba(217, 111, 50, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  totalContainer: {
+    backgroundColor: 'rgba(248, 178, 89, 0.2)',
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'flex-end',
+    marginTop: 8,
+  },
+  total: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: '#5D2A1A',
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+  },
+  detailsButton: {
+    marginTop: 12,
+    borderRadius: 10,
+    shadowColor: '#C75D2C',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  detailsButtonGradient: {
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  detailsButtonText: { 
+    color: '#fff', 
+    fontWeight: 'bold', 
+    fontSize: 14,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  loadingIndicator: {
+    marginTop: 40,
+  },
+  emptyContainer: {
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    padding: 20,
+    borderRadius: 16,
+    marginTop: 40,
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: '#8B4513',
+    fontSize: 16,
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
+  modalContainer: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    backgroundColor: 'rgba(0,0,0,0.6)' 
+  },
+  modalContent: { 
+    width: '90%', 
+    backgroundColor: '#F3E9DC', 
+    borderRadius: 16, 
+    padding: 24,
+    maxHeight: '80%',
+    shadowColor: '#C75D2C',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
+    borderWidth: 2,
+    borderColor: '#D96F32',
+  },
+  modalTitle: { 
+    fontSize: 20, 
+    fontWeight: 'bold', 
+    marginBottom: 20,
+    color: '#5D2A1A',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  deliveryInfo: {
+    marginBottom: 20,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(217, 111, 50, 0.2)',
+  },
+  infoLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#5D2A1A',
+    flex: 1,
+  },
+  infoValue: {
+    fontSize: 14,
+    color: '#8B4513',
+    flex: 2,
+    textAlign: 'right',
+  },
+  confirmationRow: {
+    backgroundColor: 'rgba(248, 178, 89, 0.3)',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderBottomWidth: 0,
+    marginTop: 8,
+  },
+  confirmationCode: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#D96F32',
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    textAlign: 'center',
+    flex: 2,
+    fontFamily: 'monospace',
+    letterSpacing: 2,
+  },
+  modalLoading: {
+    marginVertical: 40,
+  },
+  closeButton: {
+    borderRadius: 12,
+    shadowColor: '#C75D2C',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  closeButtonGradient: {
+    padding: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  closeButtonText: { 
+    color: '#fff', 
+    fontWeight: 'bold',
+    fontSize: 16,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
 });

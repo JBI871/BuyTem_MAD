@@ -278,14 +278,14 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
   };
 
   return (
-    <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.container}>
+    <LinearGradient colors={['#F3E9DC', '#F8B259', '#D96F32']} style={styles.container}>
       {/* Search */}
       <View style={styles.topArea}>
         <View style={styles.searchWrapper}>
-          <Ionicons name="search" size={20} color="#fff" style={{ marginHorizontal: 10 }} />
+          <Ionicons name="search" size={20} color="#8B3E1A" style={{ marginHorizontal: 10 }} />
           <TextInput
             placeholder="Search products..."
-            placeholderTextColor="#ccc"
+            placeholderTextColor="#8B3E1A"
             style={styles.searchInput}
             value={search}
             onChangeText={setSearch}
@@ -295,14 +295,14 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
 
       {/* Product List */}
       {loading ? (
-        <ActivityIndicator size="large" color="#fff" style={{ marginTop: 50 }} />
+        <ActivityIndicator size="large" color="#C75D2C" style={{ marginTop: 50 }} />
       ) : (
         <FlatList
           data={filteredProducts}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 150 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={refreshAll} colors={['#fff']} tintColor="#fff" />
+            <RefreshControl refreshing={refreshing} onRefresh={refreshAll} colors={['#C75D2C']} tintColor="#C75D2C" />
           }
           renderItem={({ item }) => (
             <TouchableOpacity
@@ -344,12 +344,12 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
         <TouchableWithoutFeedback onPress={() => setSelectedProduct(null)}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
-              <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.modalContentGradient}>
+              <LinearGradient colors={['#F3E9DC', '#F8B259', '#D96F32']} style={styles.modalContentGradient}>
                 <TouchableOpacity
                   style={styles.closeIconWrapper}
                   onPress={() => setSelectedProduct(null)}
                 >
-                  <Ionicons name="close" size={28} color="#fff" />
+                  <Ionicons name="close" size={28} color="#8B3E1A" />
                 </TouchableOpacity>
 
                 <ScrollView contentContainerStyle={{ paddingTop: 10 }}>
@@ -408,8 +408,8 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
                         style={styles.addToCartButton}
                         onPress={() => addToCart(selectedProduct.id, selectedQuantity)}
                       >
-                        <LinearGradient colors={['#27ae60', '#2ecc71']} style={styles.addButtonGradient}>
-                          <Ionicons name="cart" size={20} color="#fff" style={{ marginRight: 8 }} />
+                        <LinearGradient colors={['#D96F32', '#C75D2C']} style={styles.addButtonGradient}>
+                          <Ionicons name="cart" size={20} color="#F3E9DC" style={{ marginRight: 8 }} />
                           <Text style={styles.addButtonText}>Add to Cart</Text>
                         </LinearGradient>
                       </TouchableOpacity>
@@ -425,7 +425,7 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
       {/* Rating Modal for Delivered Unrated Orders */}
       <Modal visible={showRatingModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
-          <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.modalContentGradient}>
+          <LinearGradient colors={['#F3E9DC', '#F8B259', '#D96F32']} style={styles.modalContentGradient}>
             <Text style={[styles.modalTitle, { fontSize: 18 }]}>Rate your products</Text>
 
             <ScrollView style={{ maxHeight: 400, marginVertical: 10 }}>
@@ -442,7 +442,7 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
                         <FontAwesome
                           name={productRatings[item.product_id] >= star ? 'star' : 'star-o'}
                           size={24}
-                          color="#ffd700"
+                          color="#F8B259"
                         />
                       </TouchableOpacity>
                     ))}
@@ -456,14 +456,18 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
                 style={[styles.addButtonGradient, { flex: 0.45 }]}
                 onPress={skipOrder}
               >
-                <Text style={styles.addButtonText}>Skip</Text>
+                <LinearGradient colors={['#C75D2C', '#8B3E1A']} style={styles.addButtonGradient}>
+                  <Text style={styles.addButtonText}>Skip</Text>
+                </LinearGradient>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.addButtonGradient, { flex: 0.45 }]}
                 onPress={submitRatings}
               >
-                <Text style={styles.addButtonText}>Submit</Text>
+                <LinearGradient colors={['#D96F32', '#C75D2C']} style={styles.addButtonGradient}>
+                  <Text style={styles.addButtonText}>Submit</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           </LinearGradient>
@@ -477,7 +481,7 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
             style={styles.addButton}
             onPress={() => navigation.navigate('Login')}
           >
-            <LinearGradient colors={['#2980b9', '#3498db']} style={styles.addButtonGradient}>
+            <LinearGradient colors={['#D96F32', '#C75D2C']} style={styles.addButtonGradient}>
               <Text style={styles.addButtonText}>Login</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -487,8 +491,8 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
               style={styles.addButton}
               onPress={() => navigation.navigate('BuyerProfile')}
             >
-              <LinearGradient colors={['#2729aeff', '#7007e1ff']} style={styles.addButtonGradient}>
-                <Ionicons name="person-circle" size={20} color="#fff" style={{ marginRight: 8 }} />
+              <LinearGradient colors={['#D96F32', '#C75D2C']} style={styles.addButtonGradient}>
+                <Ionicons name="person-circle" size={20} color="#F3E9DC" style={{ marginRight: 8 }} />
                 <Text style={styles.addButtonText}>Profile</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -497,9 +501,9 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
               style={styles.addButton}
               onPress={() => navigation.navigate('OrderTracking')}
             >
-              <LinearGradient colors={['#ae273bff', '#e19c07ff']} style={styles.addButtonGradient}>
-                <Ionicons name="reader" size={20} color="#fff" style={{ marginRight: 8 }} />
-                <Text style={styles.addButtonText}>Orders</Text>
+              <LinearGradient colors={['#F8B259', '#D96F32']} style={styles.addButtonGradient}>
+                <Ionicons name="reader" size={20} color="#8B3E1A" style={{ marginRight: 8 }} />
+                <Text style={[styles.addButtonText, { color: '#8B3E1A' }]}>Orders</Text>
               </LinearGradient>
             </TouchableOpacity>
 
@@ -507,8 +511,8 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
               style={styles.addButton}
               onPress={() => navigation.navigate('Cart')}
             >
-              <LinearGradient colors={['#27ae60', '#2ecc71']} style={styles.addButtonGradient}>
-                <Ionicons name="cart" size={20} color="#fff" style={{ marginRight: 8 }} />
+              <LinearGradient colors={['#D96F32', '#C75D2C']} style={styles.addButtonGradient}>
+                <Ionicons name="cart" size={20} color="#F3E9DC" style={{ marginRight: 8 }} />
                 <Text style={styles.addButtonText}>
                   Cart {cartCount > 0 ? `(${cartCount})` : ''}
                 </Text>
@@ -523,7 +527,7 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
                 setUserRole(null);
               }}
             >
-              <LinearGradient colors={['#c0392b', '#e74c3c']} style={styles.addButtonGradient}>
+              <LinearGradient colors={['#C75D2C', '#8B3E1A']} style={styles.addButtonGradient}>
                 <Text style={styles.addButtonText}>Logout</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -535,30 +539,82 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#203a43' },
+  container: { flex: 1 },
   topArea: { padding: 15 },
-  searchWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#334', borderRadius: 10 },
-  searchInput: { flex: 1, color: '#fff', height: 40 },
-  productCard: { padding: 15, backgroundColor: '#344', borderRadius: 10, marginBottom: 15 },
-  productName: { fontSize: 18, color: '#fff', fontWeight: 'bold' },
-  productPrice: { color: '#fff', marginTop: 5 },
-  originalPrice: { color: '#ccc', textDecorationLine: 'line-through', marginTop: 5 },
-  discountedPrice: { color: '#27ae60', marginTop: 3 },
-  productQuantity: { color: '#fff', marginTop: 3 },
-  modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#00000099' },
-  modalContentGradient: { width: '90%', borderRadius: 20, padding: 20, maxHeight: '80%' },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff', textAlign: 'center', marginBottom: 10 },
-  modalText: { color: '#fff', marginTop: 5 },
+  searchWrapper: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: 'rgba(243, 233, 220, 0.9)', 
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#D96F32'
+  },
+  searchInput: { flex: 1, color: '#8B3E1A', height: 40, fontWeight: '500' },
+  productCard: { 
+    padding: 15, 
+    backgroundColor: 'rgba(243, 233, 220, 0.9)', 
+    borderRadius: 12, 
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(215, 111, 50, 0.3)',
+    shadowColor: '#C75D2C',
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
+  },
+  productName: { fontSize: 18, color: '#8B3E1A', fontWeight: 'bold' },
+  productPrice: { color: '#C75D2C', marginTop: 5, fontWeight: '600' },
+  originalPrice: { color: '#999', textDecorationLine: 'line-through', marginTop: 5 },
+  discountedPrice: { color: '#D96F32', marginTop: 3, fontWeight: 'bold' },
+  productQuantity: { color: '#8B3E1A', marginTop: 3 },
+  modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.7)' },
+  modalContentGradient: { 
+    width: '90%', 
+    borderRadius: 20, 
+    padding: 20, 
+    maxHeight: '80%',
+    borderWidth: 2,
+    borderColor: '#C75D2C'
+  },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#8B3E1A', textAlign: 'center', marginBottom: 10 },
+  modalText: { color: '#8B3E1A', marginTop: 5, fontWeight: '500' },
   quantityWrapper: { flexDirection: 'row', alignItems: 'center', marginVertical: 10 },
   quantityControls: { flexDirection: 'row', alignItems: 'center', marginLeft: 10 },
-  quantityButton: { backgroundColor: '#555', padding: 5, borderRadius: 5 },
-  quantityButtonText: { color: '#fff', fontSize: 18, width: 25, textAlign: 'center' },
-  quantityValue: { color: '#fff', fontSize: 18, marginHorizontal: 10 },
+  quantityButton: { backgroundColor: '#C75D2C', padding: 8, borderRadius: 8 },
+  quantityButtonText: { color: '#F3E9DC', fontSize: 18, width: 25, textAlign: 'center', fontWeight: 'bold' },
+  quantityValue: { color: '#8B3E1A', fontSize: 18, marginHorizontal: 15, fontWeight: 'bold' },
   addToCartButton: { marginTop: 15 },
-  addButtonGradient: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', padding: 10, borderRadius: 10 },
-  addButtonText: { color: '#fff', fontWeight: 'bold' },
+  addButtonGradient: { 
+    flexDirection: 'row', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    padding: 12, 
+    borderRadius: 10,
+    shadowColor: '#8B3E1A',
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  addButtonText: { 
+    color: '#F3E9DC', 
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
   closeIconWrapper: { position: 'absolute', top: 15, right: 15, zIndex: 10 },
-  bottomArea: { position: 'absolute', bottom: 0, width: '100%', flexDirection: 'row', flexWrap: 'wrap', padding: 5, justifyContent: 'space-around' },
+  bottomArea: { 
+    position: 'absolute', 
+    bottom: 0, 
+    width: '100%', 
+    flexDirection: 'row', 
+    flexWrap: 'wrap', 
+    padding: 5, 
+    justifyContent: 'space-around',
+    backgroundColor: 'rgba(243, 233, 220, 0.1)'
+  },
   addButton: { margin: 5, flexDirection: 'row', flex: 0.45 },
   logoutButton: { margin: 5, flex: 0.45 },
 });

@@ -66,41 +66,46 @@ export default function BuyerProfile({ navigation }) {
   }, []);
 
   return (
-    <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.container}>
+    <LinearGradient colors={['#F3E9DC', '#F8B259', '#D96F32']} style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.title}>Buyer Profile</Text>
 
-        <Image
-          source={profile.imageUri ? { uri: profile.imageUri } : require('../../assets/placeholderpp.png')}
-          style={styles.image}
-        />
+        <View style={styles.imageContainer}>
+          <Image
+            source={profile.imageUri ? { uri: profile.imageUri } : require('../../assets/placeholderpp.png')}
+            style={styles.image}
+          />
+        </View>
 
         <View style={styles.infoRow}>
-          <Ionicons name="person-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+          <Ionicons name="person-outline" size={20} color="#8B3E1A" style={{ marginRight: 8 }} />
           <Text style={styles.infoText}>{profile.name || 'N/A'}</Text>
         </View>
 
         <View style={styles.infoRow}>
-          <Ionicons name="mail-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+          <Ionicons name="mail-outline" size={20} color="#8B3E1A" style={{ marginRight: 8 }} />
           <Text style={styles.infoText}>{profile.email || 'N/A'}</Text>
         </View>
 
         <View style={styles.infoRow}>
-          <Ionicons name="call-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+          <Ionicons name="call-outline" size={20} color="#8B3E1A" style={{ marginRight: 8 }} />
           <Text style={styles.infoText}>{profile.contact || 'N/A'}</Text>
         </View>
 
         {/* Delivery Addresses */}
         <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Delivery Addresses:</Text>
         {profile.addresses.length === 0 ? (
-          <Text style={{ color: '#ccc' }}>No addresses added</Text>
+          <Text style={styles.noDataText}>No addresses added</Text>
         ) : (
           <FlatList
             data={profile.addresses}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               <View style={styles.addressCard}>
-                <Text style={styles.cardTitle}>{item.road}</Text>
+                <View style={styles.cardHeader}>
+                  <Ionicons name="location-outline" size={18} color="#8B3E1A" style={{ marginRight: 6 }} />
+                  <Text style={styles.cardTitle}>{item.road}</Text>
+                </View>
                 <Text style={styles.cardText}>Building: {item.building_no}</Text>
                 <Text style={styles.cardText}>Floor: {item.floor_num}</Text>
                 <Text style={styles.cardText}>Apartment: {item.apartment_no}</Text>
@@ -112,14 +117,22 @@ export default function BuyerProfile({ navigation }) {
         {/* Payment Methods */}
         <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Payment Methods:</Text>
         {profile.paymentMethods.length === 0 ? (
-          <Text style={{ color: '#ccc' }}>No payment methods added</Text>
+          <Text style={styles.noDataText}>No payment methods added</Text>
         ) : (
           <FlatList
             data={profile.paymentMethods}
             keyExtractor={(item) => item.payment_id.toString()}
             renderItem={({ item }) => (
               <View style={styles.addressCard}>
-                <Text style={styles.cardTitle}>{item.payment_method}</Text>
+                <View style={styles.cardHeader}>
+                  <Ionicons 
+                    name={item.payment_method === 'Card' ? 'card-outline' : 'phone-portrait-outline'} 
+                    size={18} 
+                    color="#8B3E1A" 
+                    style={{ marginRight: 6 }} 
+                  />
+                  <Text style={styles.cardTitle}>{item.payment_method}</Text>
+                </View>
                 {item.payment_method === 'Card' ? (
                   <>
                     <Text style={styles.cardText}>Card Number: {item.payment_credential.card_number}</Text>
@@ -138,7 +151,8 @@ export default function BuyerProfile({ navigation }) {
           onPress={() => navigation.navigate('BuyerProfileEdit', { profile })}
           style={styles.buttonWrapper}
         >
-          <LinearGradient colors={['#3a6b35', '#2c4f25']} style={styles.button}>
+          <LinearGradient colors={['#D96F32', '#C75D2C']} style={styles.button}>
+            <Ionicons name="create-outline" size={20} color="#F3E9DC" style={{ marginRight: 8 }} />
             <Text style={styles.buttonText}>Edit Profile</Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -150,22 +164,118 @@ export default function BuyerProfile({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { padding: 20, alignItems: 'center' },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 20 },
-  image: { width: 120, height: 120, borderRadius: 60, marginBottom: 20, borderWidth: 2, borderColor: '#fff' },
-  infoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  infoText: { color: '#fff', fontSize: 16 },
-  sectionTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff', alignSelf: 'flex-start', marginBottom: 10 },
-  addressCard: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    paddingHorizontal: 70,
-    paddingVertical: 15,
+  title: { 
+    fontSize: 28, 
+    fontWeight: 'bold', 
+    color: '#8B3E1A', 
+    marginBottom: 20,
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  imageContainer: {
+    shadowColor: '#C75D2C',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+    marginBottom: 20,
+  },
+  image: { 
+    width: 120, 
+    height: 120, 
+    borderRadius: 60, 
+    borderWidth: 3, 
+    borderColor: '#D96F32'
+  },
+  infoRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginBottom: 10,
+    backgroundColor: 'rgba(243, 233, 220, 0.7)',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
     borderRadius: 10,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: 'rgba(215, 111, 50, 0.3)',
+  },
+  infoText: { 
+    color: '#8B3E1A', 
+    fontSize: 16, 
+    fontWeight: '500',
+    flex: 1,
+  },
+  sectionTitle: { 
+    fontSize: 20, 
+    fontWeight: 'bold', 
+    color: '#8B3E1A', 
+    alignSelf: 'flex-start', 
+    marginBottom: 10,
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  noDataText: { 
+    color: '#C75D2C', 
+    fontStyle: 'italic',
+    alignSelf: 'flex-start',
+    marginBottom: 10,
+  },
+  addressCard: {
+    backgroundColor: 'rgba(243, 233, 220, 0.9)',
+    paddingHorizontal: 15,
+    paddingVertical: 15,
+    borderRadius: 12,
     marginBottom: 12,
     width: '100%',
+    borderWidth: 1,
+    borderColor: 'rgba(215, 111, 50, 0.3)',
+    shadowColor: '#C75D2C',
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
   },
-  cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#fff', marginBottom: 6 },
-  cardText: { color: '#fff', fontSize: 14, marginBottom: 2 },
-  buttonWrapper: { marginTop: 20, width: '100%' },
-  button: { paddingVertical: 14, borderRadius: 10, alignItems: 'center' },
-  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  cardTitle: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: '#8B3E1A',
+    flex: 1,
+  },
+  cardText: { 
+    color: '#C75D2C', 
+    fontSize: 14, 
+    marginBottom: 4,
+    fontWeight: '500',
+  },
+  buttonWrapper: { 
+    marginTop: 20, 
+    width: '100%',
+    shadowColor: '#8B3E1A',
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  button: { 
+    paddingVertical: 14, 
+    borderRadius: 10, 
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  buttonText: { 
+    color: '#F3E9DC', 
+    fontWeight: 'bold', 
+    fontSize: 16,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
 });
