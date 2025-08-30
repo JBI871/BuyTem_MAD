@@ -132,7 +132,7 @@ export default function AdminOrder() {
         </View>
 
         {cannotAccept && (
-          <Text style={{ color: 'yellow', marginTop: 5, textAlign: 'center' }}>
+          <Text style={styles.insufficientStock}>
             Some items have insufficient stock
           </Text>
         )}
@@ -140,7 +140,7 @@ export default function AdminOrder() {
         {item.status === 'pending' && (
           <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: cannotAccept ? 'gray' : 'green' }]}
+              style={[styles.acceptButton, { opacity: cannotAccept ? 0.5 : 1 }]}
               onPress={() => !cannotAccept && updateOrderStatus(item.order_id, 'Accepted', item.items)}
               disabled={cannotAccept}
             >
@@ -148,7 +148,7 @@ export default function AdminOrder() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: 'red' }]}
+              style={styles.denyButton}
               onPress={() => updateOrderStatus(item.order_id, 'Denied', item.items)}
             >
               <Text style={styles.buttonText}>Deny</Text>
@@ -160,14 +160,14 @@ export default function AdminOrder() {
   };
 
   return (
-    <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.container}>
+    <LinearGradient colors={['#F3E9DC', '#F8B259', '#D96F32']} style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.title}>All Orders</Text>
 
         {loading ? (
-          <Text style={{ color: '#ccc', marginTop: 20 }}>Loading...</Text>
+          <Text style={styles.loadingText}>Loading...</Text>
         ) : orders.length === 0 ? (
-          <Text style={{ color: '#ccc', marginTop: 20 }}>No orders yet.</Text>
+          <Text style={styles.emptyText}>No orders yet.</Text>
         ) : (
           <FlatList
             data={orders}
@@ -182,19 +182,152 @@ export default function AdminOrder() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scroll: { padding: 20 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 20, textAlign: 'center' },
-  card: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 15, marginBottom: 20 },
-  orderTitle: { fontSize: 16, fontWeight: 'bold', color: '#fff', marginBottom: 10 },
-  orderItem: { flexDirection: 'column', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 8, padding: 10, marginBottom: 8 },
-  itemName: { fontSize: 14, fontWeight: 'bold', color: '#fff' },
-  itemPrice: { fontSize: 12, color: '#fff', marginTop: 2 },
-  itemQuantity: { fontSize: 12, color: '#fff', marginTop: 2 },
-  itemStatus: { fontSize: 14, fontWeight: 'bold', color: '#fff', textAlign: 'left' },
-  total: { fontSize: 14, fontWeight: 'bold', color: '#fff', textAlign: 'right' },
-  statusTotalContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 5 },
-  buttonContainer: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 10 },
-  button: { flex: 1, padding: 10, borderRadius: 8, marginHorizontal: 5, alignItems: 'center' },
-  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
+  container: { 
+    flex: 1 
+  },
+  scroll: { 
+    padding: 20 
+  },
+  title: { 
+    fontSize: 28, 
+    fontWeight: 'bold', 
+    color: '#C75D2C', 
+    marginBottom: 20, 
+    textAlign: 'center',
+    textShadowColor: 'rgba(199, 93, 44, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  card: { 
+    backgroundColor: 'rgba(243, 233, 220, 0.95)', 
+    borderRadius: 16, 
+    padding: 18, 
+    marginBottom: 16,
+    shadowColor: '#C75D2C',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(199, 93, 44, 0.2)',
+  },
+  orderTitle: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: '#C75D2C', 
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  orderItem: { 
+    flexDirection: 'column', 
+    backgroundColor: 'rgba(248, 178, 89, 0.3)', 
+    borderRadius: 10, 
+    padding: 12, 
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(217, 111, 50, 0.3)',
+  },
+  itemName: { 
+    fontSize: 15, 
+    fontWeight: 'bold', 
+    color: '#C75D2C',
+    marginBottom: 4,
+  },
+  itemPrice: { 
+    fontSize: 13, 
+    color: '#D96F32', 
+    fontWeight: '600',
+  },
+  itemQuantity: { 
+    fontSize: 12, 
+    color: '#C75D2C', 
+    marginTop: 2,
+    opacity: 0.8,
+  },
+  itemStatus: { 
+    fontSize: 14, 
+    fontWeight: 'bold', 
+    color: '#C75D2C', 
+    textAlign: 'left',
+    backgroundColor: 'rgba(248, 178, 89, 0.4)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  total: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: '#D96F32', 
+    textAlign: 'right',
+  },
+  statusTotalContainer: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginTop: 12,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(199, 93, 44, 0.2)',
+  },
+  buttonContainer: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-around', 
+    marginTop: 16,
+    gap: 12,
+  },
+  acceptButton: {
+    flex: 1,
+    backgroundColor: '#D96F32',
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    shadowColor: '#C75D2C',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  denyButton: {
+    flex: 1,
+    backgroundColor: '#C75D2C',
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    shadowColor: '#C75D2C',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  buttonText: { 
+    color: '#F3E9DC', 
+    fontWeight: 'bold', 
+    fontSize: 14,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  insufficientStock: {
+    color: '#C75D2C',
+    marginTop: 8,
+    textAlign: 'center',
+    fontWeight: '600',
+    backgroundColor: 'rgba(248, 178, 89, 0.6)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    fontSize: 13,
+  },
+  loadingText: {
+    color: '#C75D2C',
+    marginTop: 20,
+    textAlign: 'center',
+    fontSize: 16,
+  },
+  emptyText: {
+    color: '#D96F32',
+    marginTop: 20,
+    textAlign: 'center',
+    fontSize: 16,
+  },
 });

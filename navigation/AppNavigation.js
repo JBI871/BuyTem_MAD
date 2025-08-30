@@ -34,7 +34,7 @@ import HomeScreen from '../screens/home';
 
 const Stack = createNativeStackNavigator();
 
-export const portLink = () => 'http://192.168.0.104:6000'; // backend URL
+export const portLink = () => 'http://172.20.10.6:6000'; // backend URL
 
 // Buyer stack
 function BuyerStack({ setUserRole, userEmail }) {

@@ -26,7 +26,7 @@ export default function DeliverymanOrderDetails({ route, navigation }) {
   };
 
   return (
-    <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.container}>
+    <LinearGradient colors={['#F3E9DC', '#F8B259']} style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.card}>
           <Text style={styles.customerName}>{order.customerName}</Text>
@@ -35,7 +35,7 @@ export default function DeliverymanOrderDetails({ route, navigation }) {
 
           {!assigned && (
             <TouchableOpacity onPress={handleSelectOrder} style={styles.buttonWrapper}>
-              <LinearGradient colors={['#3a6b35', '#2c4f25']} style={styles.button}>
+              <LinearGradient colors={['#D96F32', '#C75D2C']} style={styles.button}>
                 <Text style={styles.buttonText}>Select Order</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -43,7 +43,7 @@ export default function DeliverymanOrderDetails({ route, navigation }) {
 
           {assigned && status === 'Assigned to you' && (
             <TouchableOpacity onPress={handlePickup} style={styles.buttonWrapper}>
-              <LinearGradient colors={['#3a6b35', '#2c4f25']} style={styles.button}>
+              <LinearGradient colors={['#F8B259', '#D96F32']} style={styles.button}>
                 <Text style={styles.buttonText}>Mark as Picked Up</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -51,7 +51,7 @@ export default function DeliverymanOrderDetails({ route, navigation }) {
 
           {assigned && status === 'Picked Up' && (
             <TouchableOpacity onPress={handleDelivery} style={styles.buttonWrapper}>
-              <LinearGradient colors={['#7a1f1f', '#4d0f0f']} style={styles.button}>
+              <LinearGradient colors={['#C75D2C', '#D96F32']} style={styles.button}>
                 <Text style={styles.buttonText}>Mark as Delivered</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -63,45 +63,67 @@ export default function DeliverymanOrderDetails({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scroll: { padding: 20 },
+  container: { 
+    flex: 1 
+  },
+  scroll: { 
+    padding: 20 
+  },
   card: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 15,
-    padding: 25,
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
+    backgroundColor: 'rgba(215, 111, 50, 0.1)',
+    borderRadius: 18,
+    padding: 28,
+    shadowColor: '#C75D2C',
+    shadowOpacity: 0.25,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(215, 111, 50, 0.2)',
   },
   customerName: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 10,
+    color: '#C75D2C',
+    marginBottom: 12,
+    textAlign: 'center',
   },
   address: {
-    fontSize: 16,
-    color: '#ccc',
-    marginBottom: 10,
+    fontSize: 17,
+    color: '#D96F32',
+    marginBottom: 15,
+    lineHeight: 24,
+    textAlign: 'center',
+    fontWeight: '500',
   },
   status: {
-    fontSize: 14,
-    color: '#aaa',
-    marginBottom: 20,
+    fontSize: 16,
+    color: '#C75D2C',
+    marginBottom: 25,
+    textAlign: 'center',
+    fontWeight: '600',
+    backgroundColor: 'rgba(243, 233, 220, 0.7)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    alignSelf: 'center',
   },
   buttonWrapper: {
-    marginTop: 10,
+    marginTop: 15,
   },
   button: {
-    paddingVertical: 14,
-    borderRadius: 10,
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: 'center',
+    shadowColor: '#C75D2C',
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
   },
   buttonText: {
-    color: '#fff',
+    color: '#F3E9DC',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 17,
   },
 });

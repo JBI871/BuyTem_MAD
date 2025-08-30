@@ -81,54 +81,50 @@ export default function DeliverymanHome({ navigation, setUserRole }) {
   const openOrderModal = (order) => setSelectedOrder(order);
 
   const acceptOrder = async () => {
-  try {
-    const token = await AsyncStorage.getItem('token');
-    const userId = await AsyncStorage.getItem('userId');
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const userId = await AsyncStorage.getItem('userId');
 
-    // 1️⃣ Update order status
-    const orderRes = await fetch(`${portLink()}/orders/${selectedOrder.id}`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'Picked Up', deliveryManId: userId }),
-    });
-    const orderData = await orderRes.json();
-    if (!orderRes.ok) throw new Error(orderData.error || 'Failed to update order');
+      // 1️⃣ Update order status
+      const orderRes = await fetch(`${portLink()}/orders/${selectedOrder.id}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'Picked Up', deliveryManId: userId }),
+      });
+      const orderData = await orderRes.json();
+      if (!orderRes.ok) throw new Error(orderData.error || 'Failed to update order');
 
-    // 2️⃣ Update deliveryman status
-    const userRes = await fetch(`${portLink()}/users/${userId}`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'busy' }),
-    });
-    const userData = await userRes.json();
-    if (!userRes.ok) throw new Error(userData.error || 'Failed to update user status');
+      // 2️⃣ Update deliveryman status
+      const userRes = await fetch(`${portLink()}/users/${userId}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'busy' }),
+      });
+      const userData = await userRes.json();
+      if (!userRes.ok) throw new Error(userData.error || 'Failed to update user status');
 
-    // 3️⃣ Create delivery confirmation
-    const confirmRes = await fetch(`${portLink()}/confirmDelivery`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        orderId: selectedOrder.id,
-        deliveryManId: userId,
-        customerId: selectedOrder.user_id, 
-      }),
-    });
-    const confirmData = await confirmRes.json();
-    if (!confirmRes.ok) throw new Error(confirmData.error || 'Failed to create delivery confirmation');
+      // 3️⃣ Create delivery confirmation
+      const confirmRes = await fetch(`${portLink()}/confirmDelivery`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: selectedOrder.id,
+          deliveryManId: userId,
+          customerId: selectedOrder.user_id, 
+        }),
+      });
+      const confirmData = await confirmRes.json();
+      if (!confirmRes.ok) throw new Error(confirmData.error || 'Failed to create delivery confirmation');
 
-    Alert.alert(
-      'Success',
-    );
+      Alert.alert('Success');
+      setModalVisible(false);
+      navigation.replace('CurrentDelivery');
 
-    setModalVisible(false);
-    navigation.replace('CurrentDelivery');
-
-  } catch (err) {
-    console.error(err);
-    Alert.alert('Error', err.message);
-  }
-};
-
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Error', err.message);
+    }
+  };
 
   const renderOrder = ({ item }) => (
     <TouchableOpacity style={styles.orderCard} onPress={() => setSelectedOrder(item) || setModalVisible(true)}>
@@ -146,16 +142,16 @@ export default function DeliverymanHome({ navigation, setUserRole }) {
     navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
   };
 
-  if (status === null) return <ActivityIndicator size="large" color="#fff" style={{ marginTop: 50 }} />;
+  if (status === null) return <ActivityIndicator size="large" color="#D96F32" style={{ flex: 1, backgroundColor: '#F3E9DC', justifyContent: 'center' }} />;
 
   return (
-    <LinearGradient colors={['#0f2027', '#203a43', '#2c5364']} style={styles.container}>
+    <LinearGradient colors={['#F3E9DC', '#F8B259']} style={styles.container}>
       <Text style={styles.title}>Pending Orders</Text>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#fff" style={{ marginTop: 20 }} />
+        <ActivityIndicator size="large" color="#D96F32" style={{ marginTop: 20 }} />
       ) : orders.length === 0 ? (
-        <Text style={{ color: '#ccc', marginTop: 20 }}>No pending orders.</Text>
+        <Text style={styles.noOrdersText}>No pending orders.</Text>
       ) : (
         <FlatList data={orders} keyExtractor={(item) => item.id} renderItem={renderOrder} contentContainerStyle={{ paddingBottom: 20 }} />
       )}
@@ -167,15 +163,15 @@ export default function DeliverymanHome({ navigation, setUserRole }) {
             {selectedOrder && (
               <>
                 <Text style={styles.modalTitle}>Customer Info</Text>
-                <Text>Name: {selectedOrder.customerName}</Text>
-                <Text>Email: {selectedOrder.customerEmail}</Text>
-                <Text>Phone: {selectedOrder.customerPhone}</Text>
+                <Text style={styles.modalText}>Name: {selectedOrder.customerName}</Text>
+                <Text style={styles.modalText}>Email: {selectedOrder.customerEmail}</Text>
+                <Text style={styles.modalText}>Phone: {selectedOrder.customerPhone}</Text>
 
-                <Text style={[styles.modalTitle, { marginTop: 10 }]}>Address</Text>
-                <Text>Apartment: {selectedOrder.addressDetails.apartment_no}</Text>
-                <Text>Building: {selectedOrder.addressDetails.building_no}</Text>
-                <Text>Floor: {selectedOrder.addressDetails.floor_num}</Text>
-                <Text>Road: {selectedOrder.addressDetails.road}</Text>
+                <Text style={[styles.modalTitle, { marginTop: 15 }]}>Address</Text>
+                <Text style={styles.modalText}>Apartment: {selectedOrder.addressDetails.apartment_no}</Text>
+                <Text style={styles.modalText}>Building: {selectedOrder.addressDetails.building_no}</Text>
+                <Text style={styles.modalText}>Floor: {selectedOrder.addressDetails.floor_num}</Text>
+                <Text style={styles.modalText}>Road: {selectedOrder.addressDetails.road}</Text>
 
                 <Pressable style={styles.acceptButton} onPress={acceptOrder}>
                   <Text style={styles.acceptButtonText}>Accept</Text>
@@ -191,19 +187,19 @@ export default function DeliverymanHome({ navigation, setUserRole }) {
 
       {/* Navigation Buttons */}
       <TouchableOpacity onPress={() => navigation.navigate('OrderStatus')} style={{ marginTop: 20 }}>
-        <LinearGradient colors={['#f3d009ff', '#ff9900ff']} style={styles.button}>
+        <LinearGradient colors={['#F8B259', '#D96F32']} style={styles.button}>
           <Text style={styles.buttonText}>Order Status</Text>
         </LinearGradient>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('DeliverymanProfile')} style={{ marginTop: 20 }}>
-        <LinearGradient colors={['#3a6b35', '#2c4f25']} style={styles.button}>
+      <TouchableOpacity onPress={() => navigation.navigate('DeliverymanProfile')} style={{ marginTop: 15 }}>
+        <LinearGradient colors={['#D96F32', '#C75D2C']} style={styles.button}>
           <Text style={styles.buttonText}>Profile</Text>
         </LinearGradient>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={handleLogout} style={{ marginTop: 10 }}>
-        <LinearGradient colors={['#7a1f1f', '#4d0f0f']} style={styles.button}>
+      <TouchableOpacity onPress={handleLogout} style={{ marginTop: 15 }}>
+        <LinearGradient colors={['#C75D2C', '#D96F32']} style={styles.button}>
           <Text style={styles.buttonText}>Logout</Text>
         </LinearGradient>
       </TouchableOpacity>
@@ -212,18 +208,123 @@ export default function DeliverymanHome({ navigation, setUserRole }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  title: { fontSize: 26, fontWeight: 'bold', color: '#fff', marginBottom: 20 },
-  orderCard: { flexDirection: 'row', padding: 15, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 10, marginBottom: 12, alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 4, elevation: 4 },
-  customerName: { fontWeight: 'bold', color: '#fff', fontSize: 16 },
-  status: { color: '#aaa', fontSize: 14, marginTop: 2 },
-  button: { paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
-  modalContent: { width: '85%', backgroundColor: '#fff', borderRadius: 10, padding: 20 },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
-  acceptButton: { marginTop: 15, backgroundColor: '#28a745', padding: 12, borderRadius: 8, alignItems: 'center' },
-  acceptButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  closeButton: { marginTop: 10, backgroundColor: '#ff3333', padding: 10, borderRadius: 8, alignItems: 'center' },
-  closeButtonText: { color: '#fff', fontWeight: 'bold' },
+  container: { 
+    flex: 1, 
+    padding: 20 
+  },
+  title: { 
+    fontSize: 26, 
+    fontWeight: 'bold', 
+    color: '#C75D2C', 
+    marginBottom: 20,
+    textAlign: 'center'
+  },
+  orderCard: { 
+    flexDirection: 'row', 
+    padding: 18, 
+    backgroundColor: 'rgba(215, 111, 50, 0.1)', 
+    borderRadius: 12, 
+    marginBottom: 12, 
+    alignItems: 'center', 
+    shadowColor: '#C75D2C', 
+    shadowOpacity: 0.2, 
+    shadowRadius: 4, 
+    elevation: 3,
+    borderLeftWidth: 4,
+    borderLeftColor: '#D96F32'
+  },
+  customerName: { 
+    fontWeight: 'bold', 
+    color: '#C75D2C', 
+    fontSize: 16 
+  },
+  status: { 
+    color: '#D96F32', 
+    fontSize: 14, 
+    marginTop: 4,
+    fontWeight: '500'
+  },
+  noOrdersText: {
+    color: '#C75D2C',
+    marginTop: 20,
+    textAlign: 'center',
+    fontSize: 16,
+    fontStyle: 'italic'
+  },
+  button: { 
+    paddingVertical: 14, 
+    borderRadius: 10, 
+    alignItems: 'center',
+    shadowColor: '#C75D2C',
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 4
+  },
+  buttonText: { 
+    color: '#F3E9DC', 
+    fontWeight: 'bold', 
+    fontSize: 16 
+  },
+  modalContainer: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    backgroundColor: 'rgba(199, 93, 44, 0.3)' 
+  },
+  modalContent: { 
+    width: '88%', 
+    backgroundColor: '#F3E9DC', 
+    borderRadius: 15, 
+    padding: 25,
+    borderWidth: 2,
+    borderColor: '#D96F32',
+    shadowColor: '#C75D2C',
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8
+  },
+  modalTitle: { 
+    fontSize: 20, 
+    fontWeight: 'bold', 
+    marginBottom: 8,
+    color: '#C75D2C'
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#C75D2C',
+    marginBottom: 4,
+    lineHeight: 22
+  },
+  acceptButton: { 
+    marginTop: 20, 
+    backgroundColor: '#D96F32', 
+    padding: 14, 
+    borderRadius: 10, 
+    alignItems: 'center',
+    shadowColor: '#C75D2C',
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3
+  },
+  acceptButtonText: { 
+    color: '#F3E9DC', 
+    fontWeight: 'bold', 
+    fontSize: 16 
+  },
+  closeButton: { 
+    marginTop: 12, 
+    backgroundColor: '#C75D2C', 
+    padding: 12, 
+    borderRadius: 10, 
+    alignItems: 'center',
+    shadowColor: '#C75D2C',
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3
+  },
+  closeButtonText: { 
+    color: '#F3E9DC', 
+    fontWeight: 'bold',
+    fontSize: 14
+  },
 });
