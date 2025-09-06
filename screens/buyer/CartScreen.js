@@ -35,17 +35,20 @@ export default function CartScreen({ navigation }) {
           const productRes = await fetch(`${portLink()}/products/${item.product_id}`);
           if (!productRes.ok) throw new Error('Failed to fetch product info');
           const product = await productRes.json();
-          const discount = product.discount || 0;
-          const finalPrice =
-            discount > 0 ? product.price - discount * 0.01 * product.price : product.price;
+
+          const price = parseFloat(product.price);
+          const discount = parseFloat(product.discount || 0);
+          const quantity = parseInt(item.quantity);
+          const finalPrice = discount > 0 ? price - discount * 0.01 * price : price;
 
           return {
             product_id: item.product_id,
             product_name: product.name,
-            product_price: product.price,
+            product_price: price,
             discount,
-            quantity: item.quantity,
-            item_total: finalPrice * item.quantity,
+            quantity,
+            item_total: finalPrice * quantity,
+            imageUrl: product.imageUrl,
           };
         })
       );
@@ -117,13 +120,14 @@ export default function CartScreen({ navigation }) {
   // Render cart item
   const renderCartItem = ({ item }) => (
     <View style={styles.card}>
+      <Image source={{ uri: `${portLink()}${item.imageUrl}` }} style={styles.itemImage} />
       <View style={{ flex: 1 }}>
         <Text style={styles.itemName}>{item.product_name}</Text>
         {item.discount > 0 ? (
           <>
             <Text style={styles.itemPriceLine}>৳{item.product_price.toFixed(2)}</Text>
             <Text style={styles.itemPriceDiscounted}>
-              ৳{(item.product_price - item.discount * 0.01 * item.product_price).toFixed(2)}
+              ৳{(item.product_price - (item.discount * 0.01 * item.product_price)).toFixed(2)}
             </Text>
           </>
         ) : (
@@ -160,7 +164,7 @@ export default function CartScreen({ navigation }) {
           <>
             <FlatList
               data={cartItems}
-              keyExtractor={(item, index) => index.toString()}
+              keyExtractor={(item) => item.product_id}
               renderItem={renderCartItem}
               contentContainerStyle={{ paddingBottom: 20 }}
             />
@@ -168,7 +172,6 @@ export default function CartScreen({ navigation }) {
           </>
         )}
 
-        {/* Only show checkout button if cart has items */}
         {cartItems.length > 0 && (
           <TouchableOpacity
             style={[styles.button, { marginTop: 10 }]}
@@ -193,11 +196,11 @@ export default function CartScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { padding: 20 },
-  title: { 
-    fontSize: 28, 
-    fontWeight: 'bold', 
-    color: '#5D2A1A', 
-    marginBottom: 20, 
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#5D2A1A',
+    marginBottom: 20,
     textAlign: 'center',
     textShadowColor: 'rgba(0,0,0,0.1)',
     textShadowOffset: { width: 1, height: 1 },
@@ -219,52 +222,52 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(217, 111, 50, 0.2)',
   },
-  itemImage: { width: 50, height: 50, borderRadius: 8, marginRight: 15 },
-  itemName: { 
-    fontSize: 16, 
-    fontWeight: 'bold', 
+  itemImage: { width: 60, height: 60, borderRadius: 8, marginRight: 12 },
+  itemName: {
+    fontSize: 16,
+    fontWeight: 'bold',
     color: '#5D2A1A',
     marginBottom: 4,
   },
-  itemPrice: { 
-    fontSize: 14, 
-    color: '#8B4513', 
+  itemPrice: {
+    fontSize: 14,
+    color: '#8B4513',
     marginTop: 4,
     fontWeight: '600',
   },
-  itemPriceLine: { 
-    fontSize: 14, 
-    color: '#8B4513', 
-    marginTop: 4, 
+  itemPriceLine: {
+    fontSize: 14,
+    color: '#8B4513',
+    marginTop: 4,
     textDecorationLine: 'line-through',
     opacity: 0.7,
   },
-  itemPriceDiscounted: { 
-    fontSize: 14, 
-    color: '#C75D2C', 
+  itemPriceDiscounted: {
+    fontSize: 14,
+    color: '#C75D2C',
     marginTop: 2,
     fontWeight: 'bold',
   },
-  quantityContainer: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
+  quantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: 8,
     backgroundColor: 'rgba(217, 111, 50, 0.1)',
     borderRadius: 20,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
-  itemQuantity: { 
-    fontSize: 16, 
-    color: '#5D2A1A', 
+  itemQuantity: {
+    fontSize: 16,
+    color: '#5D2A1A',
     marginHorizontal: 15,
     fontWeight: 'bold',
   },
-  total: { 
-    fontSize: 20, 
-    fontWeight: 'bold', 
-    color: '#5D2A1A', 
-    textAlign: 'right', 
+  total: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#5D2A1A',
+    textAlign: 'right',
     marginTop: 15,
     backgroundColor: 'rgba(255,255,255,0.9)',
     padding: 12,
@@ -273,9 +276,9 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
-  button: { 
-    width: '100%', 
-    borderRadius: 14, 
+  button: {
+    width: '100%',
+    borderRadius: 14,
     marginTop: 20,
     shadowColor: '#C75D2C',
     shadowOffset: { width: 0, height: 4 },
@@ -283,14 +286,14 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 5,
   },
-  buttonGradient: { 
-    paddingVertical: 16, 
-    borderRadius: 14, 
+  buttonGradient: {
+    paddingVertical: 16,
+    borderRadius: 14,
     alignItems: 'center',
   },
-  buttonText: { 
-    color: '#fff', 
-    fontWeight: 'bold', 
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
     fontSize: 16,
     textShadowColor: 'rgba(0,0,0,0.3)',
     textShadowOffset: { width: 1, height: 1 },

@@ -11,18 +11,18 @@ import {
   Alert,
   TouchableWithoutFeedback,
   ScrollView,
-  RefreshControl
+  RefreshControl,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { FontAwesome } from '@expo/vector-icons';
+import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { portLink } from '../../navigation/AppNavigation';
 
 export default function BuyerHomeScreen({ setUserRole, navigation }) {
   const [search, setSearch] = useState('');
   const [products, setProducts] = useState([]);
-  const [ratings, setRatings] = useState({}); // { productId: averageRating }
+  const [ratings, setRatings] = useState({});
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -31,11 +31,26 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
   const [cartCount, setCartCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Delivered unrated orders
   const [unratedOrders, setUnratedOrders] = useState([]);
   const [currentOrderIndex, setCurrentOrderIndex] = useState(0);
-  const [productRatings, setProductRatings] = useState({}); // { productId: rating }
+  const [productRatings, setProductRatings] = useState({});
   const [showRatingModal, setShowRatingModal] = useState(false);
+
+  // Filter states
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [minRating, setMinRating] = useState('');
+  const [discountOnly, setDiscountOnly] = useState(false);
+
+
+  // Sorting states
+  const [showSortModal, setShowSortModal] = useState(false);
+  const [sortOption, setSortOption] = useState(null); // 'priceLowHigh', 'priceHighLow', 'ratingLowHigh', 'ratingHighLow'
+
+  // Helper to get full image URL
+  const getFullImageUrl = (imageUrl) => `${portLink()}${imageUrl}`;
 
   // Fetch rating for a product
   const fetchRatingForProduct = async (productId) => {
@@ -50,7 +65,7 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
     }
   };
 
-  // Fetch products and their ratings
+  // Fetch products and ratings
   const fetchProducts = async () => {
     try {
       const response = await fetch(`${portLink()}/products`);
@@ -58,7 +73,6 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
       const productsData = await response.json();
       setProducts(productsData);
 
-      // Fetch ratings for each product
       const ratingsObj = {};
       await Promise.all(
         productsData.map(async (p) => {
@@ -137,7 +151,13 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
   // Pull-to-refresh
   const refreshAll = async () => {
     setRefreshing(true);
-    await Promise.all([fetchProducts(), fetchCategories(), checkLogin(), fetchCartCount(), fetchUnratedOrders()]);
+    await Promise.all([
+      fetchProducts(),
+      fetchCategories(),
+      checkLogin(),
+      fetchCartCount(),
+      fetchUnratedOrders(),
+    ]);
     setRefreshing(false);
   };
 
@@ -150,9 +170,50 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
     fetchData();
   }, []);
 
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
+
+    const matchesCategory =
+      selectedCategories.length === 0 || selectedCategories.includes(p.category);
+
+    const matchesPrice =
+      (!minPrice || p.price >= parseFloat(minPrice)) &&
+      (!maxPrice || p.price <= parseFloat(maxPrice));
+
+    const productRating = ratings[p.id] !== undefined ? ratings[p.id] : 0;
+    const matchesRating = !minRating || productRating >= parseFloat(minRating);
+
+    const matchesDiscount = !discountOnly || (p.discount && p.discount > 0);
+
+    return matchesSearch && matchesCategory && matchesPrice && matchesRating && matchesDiscount;
+  });
+
+
+  // Sorting function
+  const getSortedProducts = () => {
+    if (!sortOption) return filteredProducts;
+
+    const sorted = [...filteredProducts];
+
+    switch (sortOption) {
+      case 'priceLowHigh':
+        sorted.sort((a, b) => a.price - b.price);
+        break;
+      case 'priceHighLow':
+        sorted.sort((a, b) => b.price - a.price);
+        break;
+      case 'ratingLowHigh':
+        sorted.sort((a, b) => (ratings[a.id] || 0) - (ratings[b.id] || 0));
+        break;
+      case 'ratingHighLow':
+        sorted.sort((a, b) => (ratings[b.id] || 0) - (ratings[a.id] || 0));
+        break;
+    }
+
+    return sorted;
+  };
+
+  const sortedProducts = getSortedProducts();
 
   // Add to cart
   const addToCart = async (productId, quantity) => {
@@ -185,87 +246,82 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
     }
   };
 
-  // Update rating in modal
+
+
+  // Update rating
   const updateRating = (productId, rating) => {
     setProductRatings(prev => ({ ...prev, [productId]: rating }));
   };
 
-  // Submit ratings for current order and mark order as rated
+  // Submit ratings
   const submitRatings = async () => {
-  try {
-    const token = await AsyncStorage.getItem('token');
-    if (!token) return;
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) return;
 
-    const currentOrder = unratedOrders[currentOrderIndex];
+      const currentOrder = unratedOrders[currentOrderIndex];
 
-    // Submit all product ratings
-    await Promise.all(
-      currentOrder.items.map(async (item) => {
-        const rating = productRatings[item.product_id];
-        if (!rating) return;
+      await Promise.all(
+        currentOrder.items.map(async (item) => {
+          const rating = productRatings[item.product_id];
+          if (!rating) return;
 
-        // Fetch existing rating
-        const ratingResponse = await fetch(`${portLink()}/ratings/${item.product_id}`);
-        const ratingData = await ratingResponse.json();
+          const ratingResponse = await fetch(`${portLink()}/ratings/${item.product_id}`);
+          const ratingData = await ratingResponse.json();
 
-        let total = rating;
-        let count = 1;
+          let total = rating;
+          let count = 1;
 
-        if (ratingData.rating) {
-          total += parseFloat(ratingData.rating.total || 0);
-          count += parseInt(ratingData.rating.count || 0);
-        }
+          if (ratingData.rating) {
+            total += parseFloat(ratingData.rating.total || 0);
+            count += parseInt(ratingData.rating.count || 0);
+          }
 
-        // Update rating for the product
-        const updateResponse = await fetch(`${portLink()}/ratings/update/${item.product_id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ total, count }),
-        });
+          const updateResponse = await fetch(`${portLink()}/ratings/update/${item.product_id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ total, count }),
+          });
 
-        if (!updateResponse.ok) {
-          const text = await updateResponse.text();
-          console.error(`Failed to update rating for ${item.product_id}:`, text);
-        }
-      })
-    );
+          if (!updateResponse.ok) {
+            const text = await updateResponse.text();
+            console.error(`Failed to update rating for ${item.product_id}:`, text);
+          }
+        })
+      );
 
-    // Mark order as rated
-    const orderResponse = await fetch(`${portLink()}/orders/rating_order/${currentOrder.order_id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({}),
-    });
+      const orderResponse = await fetch(`${portLink()}/orders/rating_order/${currentOrder.order_id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({}),
+      });
 
-    if (!orderResponse.ok) {
-      const text = await orderResponse.text();
-      console.error('Failed to mark order as rated:', text);
+      if (!orderResponse.ok) {
+        const text = await orderResponse.text();
+        console.error('Failed to mark order as rated:', text);
+      }
+
+      const nextIndex = currentOrderIndex + 1;
+      if (nextIndex < unratedOrders.length) {
+        setCurrentOrderIndex(nextIndex);
+        setProductRatings({});
+      } else {
+        setShowRatingModal(false);
+        setUnratedOrders([]);
+      }
+
+    } catch (err) {
+      console.error('submitRatings error:', err);
+      Alert.alert('Error', 'Failed to submit ratings');
     }
+  };
 
-    // Move to next order
-    const nextIndex = currentOrderIndex + 1;
-    if (nextIndex < unratedOrders.length) {
-      setCurrentOrderIndex(nextIndex);
-      setProductRatings({});
-    } else {
-      setShowRatingModal(false);
-      setUnratedOrders([]);
-    }
-
-  } catch (err) {
-    console.error('submitRatings error:', err);
-    Alert.alert('Error', 'Failed to submit ratings');
-  }
-};
-
-
-  // Skip current order
   const skipOrder = () => {
     const nextIndex = currentOrderIndex + 1;
     if (nextIndex < unratedOrders.length) {
@@ -293,12 +349,135 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
         </View>
       </View>
 
+      {/* Sort Button */}
+      <TouchableOpacity
+        style={{
+          backgroundColor: '#F3E9DC',
+          padding: 10,
+          borderRadius: 12,
+          marginHorizontal: 20,
+          marginVertical: 10,
+          alignItems: 'center',
+        }}
+        onPress={() => setShowSortModal(true)}
+      >
+        <Text style={{ color: '#8B3E1A', fontWeight: 'bold' }}>Sort</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={{
+          backgroundColor: '#F3E9DC',
+          padding: 10,
+          borderRadius: 12,
+          marginHorizontal: 20,
+          marginVertical: 10,
+          alignItems: 'center',
+        }}
+        onPress={() => setShowFilterModal(true)}
+      >
+        <Text style={{ color: '#8B3E1A', fontWeight: 'bold' }}>Filter</Text>
+      </TouchableOpacity>
+
+
+      <Modal visible={showFilterModal} transparent animationType="slide">
+        <TouchableWithoutFeedback onPress={() => setShowFilterModal(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <LinearGradient colors={['#F3E9DC', '#F8B259', '#D96F32']} style={styles.modalContentGradient}>
+                <Text style={[styles.modalTitle, { fontSize: 18, textAlign: 'center' }]}>Filter Products</Text>
+
+                <ScrollView style={{ maxHeight: 400 }}>
+                  {/* Categories */}
+                  <Text style={styles.modalText}>Categories</Text>
+                  {categories.map(cat => (
+                    <TouchableOpacity
+                      key={cat.id}
+                      onPress={() => {
+                        setSelectedCategories(prev =>
+                          prev.includes(cat.id) ? prev.filter(c => c !== cat.id) : [...prev, cat.id]
+                        );
+                      }}
+                      style={{
+                        padding: 10,
+                        backgroundColor: selectedCategories.includes(cat.id) ? '#D96F32' : '#F3E9DC',
+                        borderRadius: 8,
+                        marginVertical: 5,
+                      }}
+                    >
+                      <Text style={{ color: selectedCategories.includes(cat.id) ? '#F3E9DC' : '#8B3E1A' }}>
+                        {cat.category_name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+
+                  {/* Price */}
+                  <Text style={styles.modalText}>Price Range</Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <TextInput
+                      placeholder="Min"
+                      value={minPrice}
+                      onChangeText={setMinPrice}
+                      keyboardType="numeric"
+                      style={{ flex: 0.45, backgroundColor: '#F3E9DC', padding: 8, borderRadius: 8 }}
+                    />
+                    <TextInput
+                      placeholder="Max"
+                      value={maxPrice}
+                      onChangeText={setMaxPrice}
+                      keyboardType="numeric"
+                      style={{ flex: 0.45, backgroundColor: '#F3E9DC', padding: 8, borderRadius: 8 }}
+                    />
+                  </View>
+
+                  {/* Rating */}
+                  <Text style={styles.modalText}>Minimum Rating</Text>
+                  <TextInput
+                    placeholder="1-5"
+                    value={minRating}
+                    onChangeText={setMinRating}
+                    keyboardType="numeric"
+                    style={{ backgroundColor: '#F3E9DC', padding: 8, borderRadius: 8, marginVertical: 5 }}
+                  />
+
+                  {/* Discount */}
+                  <TouchableOpacity
+                    style={{
+                      padding: 10,
+                      backgroundColor: discountOnly ? '#D96F32' : '#F3E9DC',
+                      borderRadius: 8,
+                      marginVertical: 5,
+                    }}
+                    onPress={() => setDiscountOnly(prev => !prev)}
+                  >
+                    <Text style={{ color: discountOnly ? '#F3E9DC' : '#8B3E1A' }}>Discount Only</Text>
+                  </TouchableOpacity>
+
+                  {/* Apply Button */}
+                  <TouchableOpacity
+                    style={{
+                      padding: 12,
+                      backgroundColor: '#C75D2C',
+                      borderRadius: 8,
+                      marginTop: 10,
+                      alignItems: 'center',
+                    }}
+                    onPress={() => setShowFilterModal(false)}
+                  >
+                    <Text style={{ color: '#F3E9DC', fontWeight: 'bold' }}>Apply Filters</Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </LinearGradient>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+
       {/* Product List */}
       {loading ? (
         <ActivityIndicator size="large" color="#C75D2C" style={{ marginTop: 50 }} />
       ) : (
         <FlatList
-          data={filteredProducts}
+          data={sortedProducts}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 150 }}
           refreshControl={
@@ -307,13 +486,16 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.productCard}
-              onPress={() => {
-                setSelectedProduct(item);
-                setSelectedQuantity(1);
-              }}
+              onPress={() => setSelectedProduct(item)}
             >
-              <Text style={styles.productName}>{item.name}</Text>
+              {/* Product Image */}
+              <Image
+                source={{ uri: getFullImageUrl(item.imageUrl) }}
+                style={{ width: '100%', height: 180, borderRadius: 12, marginBottom: 10 }}
+                resizeMode="cover"
+              />
 
+              <Text style={styles.productName}>{item.name}</Text>
               {item.discount > 0 ? (
                 <>
                   <Text style={styles.originalPrice}>Price: ৳{item.price}</Text>
@@ -324,7 +506,6 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
               ) : (
                 <Text style={styles.productPrice}>Price: ৳{item.price}</Text>
               )}
-
               <Text style={styles.productQuantity}>Quantity: {item.quantity}</Text>
               <Text style={styles.productQuantity}>
                 Rating: {ratings[item.id] !== undefined ? ratings[item.id] : 'Loading...'}
@@ -333,6 +514,43 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
           )}
         />
       )}
+
+      {/* Sort Modal */}
+      <Modal visible={showSortModal} transparent animationType="slide">
+        <TouchableWithoutFeedback onPress={() => setShowSortModal(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <LinearGradient colors={['#F3E9DC', '#F8B259', '#D96F32']} style={styles.modalContentGradient}>
+                <Text style={[styles.modalTitle, { fontSize: 18, textAlign: 'center' }]}>Sort Products</Text>
+
+                {[
+                  { key: 'priceLowHigh', label: 'Price: Low to High' },
+                  { key: 'priceHighLow', label: 'Price: High to Low' },
+                  { key: 'ratingLowHigh', label: 'Rating: Low to High' },
+                  { key: 'ratingHighLow', label: 'Rating: High to Low' },
+                ].map((option) => (
+                  <TouchableOpacity
+                    key={option.key}
+                    style={{
+                      padding: 15,
+                      marginVertical: 5,
+                      backgroundColor: '#F3E9DC',
+                      borderRadius: 8,
+                      alignItems: 'center',
+                    }}
+                    onPress={() => {
+                      setSortOption(option.key);
+                      setShowSortModal(false);
+                    }}
+                  >
+                    <Text style={{ color: '#8B3E1A', fontWeight: 'bold' }}>{option.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </LinearGradient>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
 
       {/* Product Details Modal */}
       <Modal
@@ -353,6 +571,13 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
                 </TouchableOpacity>
 
                 <ScrollView contentContainerStyle={{ paddingTop: 10 }}>
+                  {/* Image */}
+                  <Image
+                    source={{ uri: selectedProduct ? getFullImageUrl(selectedProduct.imageUrl) : null }}
+                    style={{ width: '100%', height: 200, borderRadius: 12, marginBottom: 10 }}
+                    resizeMode="cover"
+                  />
+
                   <Text style={styles.modalTitle}>{selectedProduct?.name}</Text>
 
                   {selectedProduct?.discount > 0 ? (
@@ -372,7 +597,6 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
                     Category: {categories.find(cat => cat.id === selectedProduct?.category)?.category_name || 'N/A'}
                   </Text>
                   <Text style={styles.modalText}>Description: {selectedProduct?.description || 'N/A'}</Text>
-
                   <Text style={styles.modalText}>
                     Rating: {ratings[selectedProduct?.id] !== undefined ? ratings[selectedProduct?.id] : 'Loading...'}
                   </Text>
@@ -422,7 +646,7 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
         </TouchableWithoutFeedback>
       </Modal>
 
-      {/* Rating Modal for Delivered Unrated Orders */}
+      {/* Rating Modal */}
       <Modal visible={showRatingModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <LinearGradient colors={['#F3E9DC', '#F8B259', '#D96F32']} style={styles.modalContentGradient}>
@@ -503,7 +727,7 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
             >
               <LinearGradient colors={['#F8B259', '#D96F32']} style={styles.addButtonGradient}>
                 <Ionicons name="reader" size={20} color="#8B3E1A" style={{ marginRight: 8 }} />
-                <Text style={[styles.addButtonText, { color: '#8B3E1A' }]}>Orders</Text>
+                <Text style={styles.addButtonText}>Orders</Text>
               </LinearGradient>
             </TouchableOpacity>
 
@@ -513,21 +737,20 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
             >
               <LinearGradient colors={['#D96F32', '#C75D2C']} style={styles.addButtonGradient}>
                 <Ionicons name="cart" size={20} color="#F3E9DC" style={{ marginRight: 8 }} />
-                <Text style={styles.addButtonText}>
-                  Cart {cartCount > 0 ? `(${cartCount})` : ''}
-                </Text>
+                <Text style={styles.addButtonText}>Cart ({cartCount})</Text>
               </LinearGradient>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.logoutButton}
+              style={styles.addButton}
               onPress={async () => {
-                await AsyncStorage.removeItem('token');
-                setIsLoggedIn(false);
+                await AsyncStorage.clear();
                 setUserRole(null);
+                setIsLoggedIn(false);
               }}
             >
               <LinearGradient colors={['#C75D2C', '#8B3E1A']} style={styles.addButtonGradient}>
+                <Ionicons name="log-out" size={20} color="#F3E9DC" style={{ marginRight: 8 }} />
                 <Text style={styles.addButtonText}>Logout</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -540,81 +763,71 @@ export default function BuyerHomeScreen({ setUserRole, navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  topArea: { padding: 15 },
-  searchWrapper: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    backgroundColor: 'rgba(243, 233, 220, 0.9)', 
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#D96F32'
+  topArea: { padding: 10 },
+  searchWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3E9DC',
+    borderRadius: 12,
   },
-  searchInput: { flex: 1, color: '#8B3E1A', height: 40, fontWeight: '500' },
-  productCard: { 
-    padding: 15, 
-    backgroundColor: 'rgba(243, 233, 220, 0.9)', 
-    borderRadius: 12, 
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(215, 111, 50, 0.3)',
-    shadowColor: '#C75D2C',
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 4,
+  searchInput: { flex: 1, color: '#8B3E1A', paddingVertical: 8 },
+  productCard: {
+    backgroundColor: '#F3E9DC',
+    borderRadius: 12,
+    padding: 10,
+    marginVertical: 8,
   },
-  productName: { fontSize: 18, color: '#8B3E1A', fontWeight: 'bold' },
-  productPrice: { color: '#C75D2C', marginTop: 5, fontWeight: '600' },
-  originalPrice: { color: '#999', textDecorationLine: 'line-through', marginTop: 5 },
-  discountedPrice: { color: '#D96F32', marginTop: 3, fontWeight: 'bold' },
-  productQuantity: { color: '#8B3E1A', marginTop: 3 },
-  modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.7)' },
-  modalContentGradient: { 
-    width: '90%', 
-    borderRadius: 20, 
-    padding: 20, 
-    maxHeight: '80%',
-    borderWidth: 2,
-    borderColor: '#C75D2C'
+  productName: { fontSize: 16, fontWeight: 'bold', color: '#8B3E1A' },
+  productPrice: { fontSize: 14, color: '#8B3E1A' },
+  originalPrice: { fontSize: 14, color: '#8B3E1A', textDecorationLine: 'line-through' },
+  discountedPrice: { fontSize: 14, color: '#D96F32', fontWeight: 'bold' },
+  productQuantity: { fontSize: 12, color: '#8B3E1A' },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
   },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#8B3E1A', textAlign: 'center', marginBottom: 10 },
-  modalText: { color: '#8B3E1A', marginTop: 5, fontWeight: '500' },
-  quantityWrapper: { flexDirection: 'row', alignItems: 'center', marginVertical: 10 },
-  quantityControls: { flexDirection: 'row', alignItems: 'center', marginLeft: 10 },
-  quantityButton: { backgroundColor: '#C75D2C', padding: 8, borderRadius: 8 },
-  quantityButtonText: { color: '#F3E9DC', fontSize: 18, width: 25, textAlign: 'center', fontWeight: 'bold' },
-  quantityValue: { color: '#8B3E1A', fontSize: 18, marginHorizontal: 15, fontWeight: 'bold' },
-  addToCartButton: { marginTop: 15 },
-  addButtonGradient: { 
-    flexDirection: 'row', 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    padding: 12, 
-    borderRadius: 10,
-    shadowColor: '#8B3E1A',
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
-  },
-  addButtonText: { 
-    color: '#F3E9DC', 
-    fontWeight: 'bold',
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+  modalContentGradient: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 20,
+    maxHeight: '90%',
   },
   closeIconWrapper: { position: 'absolute', top: 15, right: 15, zIndex: 10 },
-  bottomArea: { 
-    position: 'absolute', 
-    bottom: 0, 
-    width: '100%', 
-    flexDirection: 'row', 
-    flexWrap: 'wrap', 
-    padding: 5, 
-    justifyContent: 'space-around',
-    backgroundColor: 'rgba(243, 233, 220, 0.1)'
+  modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#8B3E1A', marginBottom: 10 },
+  modalText: { fontSize: 14, color: '#8B3E1A', marginVertical: 2 },
+  quantityWrapper: { marginVertical: 10 },
+  quantityControls: { flexDirection: 'row', alignItems: 'center', marginTop: 5 },
+  quantityButton: {
+    width: 32,
+    height: 32,
+    backgroundColor: '#D96F32',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 6,
   },
-  addButton: { margin: 5, flexDirection: 'row', flex: 0.45 },
-  logoutButton: { margin: 5, flex: 0.45 },
+  quantityButtonText: { color: '#F3E9DC', fontSize: 18, fontWeight: 'bold' },
+  quantityValue: { marginHorizontal: 10, fontSize: 16 },
+  addToCartButton: { marginTop: 10 },
+  addButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  addButtonText: { color: '#F3E9DC', fontWeight: 'bold', fontSize: 16 },
+  bottomArea: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 10,
+    backgroundColor: 'transparent',
+  },
+  addButton: { flex: 1, marginHorizontal: 5 },
 });
+
